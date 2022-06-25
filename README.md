@@ -1,7 +1,5 @@
-# discord.py template
+# Music bot with lavalink
 
-discord.py bot template so i can do stuff faster without writing same code over and over again :blobpain:
+A easy/configurable/lots of features for your need!  
 
-## owo how to do dis?
-
-use poetry and you install package or maybe edit stuff in pyproject.toml idrk
+## How to host this???
