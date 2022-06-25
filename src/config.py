@@ -1,6 +1,9 @@
+import sqlite3
+
 import discord
 from discord.ext import commands
-import sqlite3
+
+
 class Config(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -10,16 +13,24 @@ class Config(commands.Cog):
         """
         Configure the bot.
         """
-        pass
 
     @config.command()
-    async def default_lavalink(self, ctx: commands.Context, host: str="", port: int=8080, password: str = "youshallnotpass"):
+    async def default_lavalink(
+        self,
+        ctx: commands.Context,
+        host: str = "",
+        port: int = 8080,
+        password: str = "youshallnotpass",
+    ):
         db = sqlite3.connect("database.sqlite3")
         cursor = db.cursor()
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO config(server_id, lavalink_host, lavalink_port, lavalink_password)
             VALUES(?, ?, ?, ?)
-            """, (ctx.guild.id, host, port, password))
+            """,
+            (ctx.guild.id, host, port, password),
+        )
         db.commit()
         db.close()
         await ctx.reply(
@@ -28,4 +39,3 @@ class Config(commands.Cog):
                 description="Default lavalink server set.",
             )
         )
-        

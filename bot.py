@@ -9,9 +9,9 @@ import asyncio
 import datetime
 import logging
 import os
+import sqlite3
 import subprocess
 import traceback
-import sqlite3
 
 from replit_support import start
 
@@ -121,9 +121,7 @@ async def main():
                 bot.start_time = datetime.datetime.utcnow()
                 get_version()
                 with open("sql/starter.sql") as f:
-                    bot.db.cursor().execute(
-                        f.read()
-                    )
+                    bot.db.cursor().execute(f.read())
                     bot.db.commit()
                     bot.db.close()
                 log.info(
