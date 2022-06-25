@@ -1,0 +1,29 @@
+name: Beautifier
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions: write-all
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      
+    - name: install
+      run: make install-beautifier
+      
+    - name: beauty
+      run: make beauty
+
+    - name: send those file back pzlpzlpzlpzlz
+      uses: EndBug/add-and-commit@v7.5.0
+      with:
+        message: "beautified and linted code you stupid nerd"
+        author_name: "Code beautifier and Code linter"
