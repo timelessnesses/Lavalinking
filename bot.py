@@ -11,8 +11,11 @@ import logging
 import os
 import subprocess
 import traceback
+import sqlite3
 
 from replit_support import start
+
+db = sqlite3.connect("database.sqlite3")
 
 formatting = logging.Formatter("[%(asctime)s] - [%(levelname)s] [%(name)s] %(message)s")
 
@@ -39,6 +42,7 @@ logging.getLogger("discord").setLevel(logging.WARNING)  # mute
 
 bot = commands.Bot(command_prefix="", intents=discord.Intents.all())
 bot.log = log
+bot.db = db
 
 observer = Observer()
 
@@ -116,6 +120,12 @@ async def main():
                 log.info("Started file watcher")
                 bot.start_time = datetime.datetime.utcnow()
                 get_version()
+                with open("sql/starter.sql") as f:
+                    bot.db.cursor().execute(
+                        f.read()
+                    )
+                    bot.db.commit()
+                    bot.db.close()
                 log.info(
                     f"Started with version {bot.version_} and started at {bot.start_time}"
                 )
@@ -123,7 +133,7 @@ async def main():
                     start()
                     log.info("REPLIT detected opening webserver for recieve pinging")
                 try:
-                    await bot.start(os.environ["ALPHABET_TOKEN"])
+                    await bot.start(os.environ["MUSIC_TOKEN"])
                 except discord.errors.HTTPException:
                     log.exception("You likely got ratelimited or bot's token is wrong")
                 started = True  # break loop
