@@ -13,7 +13,7 @@ import sqlite3
 import subprocess
 import traceback
 
-from replit_support import start
+from frontend.app import start
 
 db = sqlite3.connect("database.sqlite3")
 
