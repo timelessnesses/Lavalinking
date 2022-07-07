@@ -1,9 +1,8 @@
 import sqlite3
 
 import discord
-from discord.ext import commands
 import wavelink
-from wavelink.ext.spotify import Spotify
+from discord.ext import commands
 
 
 class Config(commands.Cog):
