@@ -132,9 +132,8 @@ class Music(commands.Cog):
         )
         current_music = await player.play(query, replace=False)
         await ctx.send(
-            embed=discord.Embed(
-                title="Currently Playing",
-                description="Currently Playing {}".format(current_music.raw["title"]),
-                color=discord.Color.green(),
-            )
+            embed=info(current_music, ctx.author.voice.channel.mention)
         )
+
+    def info(self, current_music: wavelink.Track, vc: str):
+
