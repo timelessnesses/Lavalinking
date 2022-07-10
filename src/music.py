@@ -1,8 +1,14 @@
 import wavelink
+from wavelink.ext import spotify
 import discord
 from discord.ext import commands
 import asyncio
 from dotenv import load_dotenv
+from datetime import timedelta
+import sys
+
+sys.path.append("..")
+from config import config
 
 load_dotenv()
 import os
@@ -11,7 +17,7 @@ import os
 class Music(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        asyncio.run(self.connect())
+        self.bot.loop.create_task(self.connect())
 
     async def connect(self):
         await self.bot.wait_until_ready()
@@ -19,9 +25,9 @@ class Music(commands.Cog):
         if os.getenv("MUSIC_SPOTIFY_CLIENT_ID") and os.getenv(
             "MUSIC_SPOTIFY_CLIENT_SECRET"
         ):
-            client = wavelink.ext.spotify.SpotifyClient(
-                os.getenv("MUSIC_SPOTIFY_CLIENT_ID"),
-                os.getenv("MUSIC_SPOTIFY_CLIENT_SECRET"),
+            client = spotify.SpotifyClient(
+                client_id=os.getenv("MUSIC_SPOTIFY_CLIENT_ID"),
+                client_secret=os.getenv("MUSIC_SPOTIFY_CLIENT_SECRET"),
             )
         await wavelink.NodePool.create_node(
             bot=self.bot,
@@ -30,6 +36,12 @@ class Music(commands.Cog):
             password=os.getenv("MUSIC_LAVALINK_PASSWORD"),
             spotify_client=client,
         )
+
+    def cog_unload(self):
+        self.bot.loop.create_task(self.disconnect())
+
+    async def disconnect(self):
+        await wavelink.NodePool.get_node().disconnect()
 
     async def cog_before_invoke(self, ctx: commands.Context):
         if not ctx.guild:
@@ -45,18 +57,6 @@ class Music(commands.Cog):
                 embed=discord.Embed(
                     title="Error",
                     description="You must be in a voice channel to use this command.",
-                    color=discord.Color.red(),
-                )
-            )
-        if not ctx.guild.me.voice:
-            await ctx.voice_client.move_to(ctx.author.voice.channel)
-        else:
-            return await ctx.send(
-                embed=discord.Embed(
-                    title="Error",
-                    description="I am already in {}. And due to discord's limitation I couldn't join multiple voice chats.".format(
-                        ctx.guild.me.voice.channel.mention
-                    ),
                     color=discord.Color.red(),
                 )
             )
@@ -115,7 +115,9 @@ class Music(commands.Cog):
         )
 
     @music.command()
-    async def play(self, ctx: commands.Context, *, query: str):
+    async def play_youtube(
+        self, ctx: commands.Context, *, query: wavelink.YouTubeTrack
+    ):
         """
         Play a song
         """
@@ -132,8 +134,48 @@ class Music(commands.Cog):
         )
         current_music = await player.play(query, replace=False)
         await ctx.send(
-            embed=info(current_music, ctx.author.voice.channel.mention)
+            embed=self.info(current_music, ctx, ctx.author.voice.channel.mention)
         )
 
-    def info(self, current_music: wavelink.Track, vc: str):
+    @music.command()
+    async def play_spotify(self, ctx: commands.Context, *, query: spotify.SpotifyTrack):
+        """
+        Play a song
+        """
+        if not ctx.voice_client:
+            player = await ctx.author.voice.channel.connect(cls=wavelink.Player)
+        else:
+            player = ctx.voice_client
+        await ctx.send(
+            embed=discord.Embed(
+                title="Fetching",
+                description="Fetching data with query: {}".format(query),
+                color=discord.Color.yellow(),
+            )
+        )
+        current_music = await player.play(query, replace=False)
+        await ctx.send(
+            embed=self.info(current_music, ctx, ctx.author.voice.channel.mention)
+        )
 
+    def info(self, current_music: wavelink.Track, ctx: commands.Context, vc: str):
+        return (
+            discord.Embed(
+                title="Now Playing",
+                description="Now playing: {}".format(current_music.title),
+                color=discord.Color.green(),
+            )
+            .set_thumbnail(url=current_music.thumbnail)
+            .set_footer(text="Requested by: {}".format(ctx.author))
+            .add_field(
+                name="Duration",
+                value=str(timedelta(seconds=current_music.duration)),
+                inline=True,
+            )
+            .add_field(name="Author", value=current_music.author, inline=True)
+            .add_field(name="URL", value=current_music.uri, inline=True)
+        )
+
+
+async def setup(bot):
+    await bot.add_cog(Music(bot))

@@ -12,8 +12,7 @@ import os
 import sqlite3
 import subprocess
 import traceback
-
-from frontend.app import start
+from config import config
 
 db = sqlite3.connect("database.sqlite3")
 
@@ -32,15 +31,15 @@ try:
     os.mkdir("logs")
 except FileExistsError:
     pass
-with open("logs/bot.log", "w") as f:
-    f.write("")
-f = logging.FileHandler("logs/bot.log", "r")
+with open("logs/bot.log", "w") as f_:
+    f_.write("")
+f = logging.FileHandler("logs/bot.log", "a")
 f.setFormatter(formatting)
 log.addHandler(f)
 
 logging.getLogger("discord").setLevel(logging.WARNING)  # mute
 
-bot = commands.Bot(command_prefix="", intents=discord.Intents.all())
+bot = commands.Bot(command_prefix=config.prefix, intents=discord.Intents.all())
 bot.log = log
 bot.db = db
 
@@ -100,7 +99,7 @@ async def on_ready():
     log.info(bot.user.name)
     log.info(bot.user.id)
     log.info("------")
-    await bot.change_presence(activity=discord.Game(name="a!help"))
+    await bot.change_presence(activity=discord.Game(name=f"{config.prefix}help"))
     await bot.tree.sync()
 
 
@@ -120,10 +119,6 @@ async def main():
                 log.info("Started file watcher")
                 bot.start_time = datetime.datetime.utcnow()
                 get_version()
-                with open("sql/starter.sql") as f:
-                    bot.db.cursor().execute(f.read())
-                    bot.db.commit()
-                    bot.db.close()
                 log.info(
                     f"Started with version {bot.version_} and started at {bot.start_time}"
                 )
@@ -131,13 +126,12 @@ async def main():
                     start()
                     log.info("REPLIT detected opening webserver for recieve pinging")
                 try:
-                    await bot.start(os.environ["MUSIC_TOKEN"])
+                    await bot.start(config.token)
                 except discord.errors.HTTPException:
                     log.exception("You likely got ratelimited or bot's token is wrong")
                 started = True  # break loop
     except KeyboardInterrupt:
         log.info("Exiting...")
-        await bot.db.close()
 
 
 if __name__ == "__main__":
