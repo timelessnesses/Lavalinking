@@ -26,14 +26,14 @@ class Music(commands.Cog):
             "MUSIC_SPOTIFY_CLIENT_SECRET"
         ):
             client = spotify.SpotifyClient(
-                client_id=os.getenv("MUSIC_SPOTIFY_CLIENT_ID"),
-                client_secret=os.getenv("MUSIC_SPOTIFY_CLIENT_SECRET"),
+                client_id=config.spotify_client_id,
+                client_secret=config.spotify_client_secret,
             )
         await wavelink.NodePool.create_node(
             bot=self.bot,
-            host=os.getenv("MUSIC_LAVALINK_HOST"),
-            port=int(os.getenv("MUSIC_LAVALINK_PORT")),
-            password=os.getenv("MUSIC_LAVALINK_PASSWORD"),
+            host=config.lavalink_host,
+            port=int(config.lavalink_port),
+            password=config.lavalink_password,
             spotify_client=client,
         )
 

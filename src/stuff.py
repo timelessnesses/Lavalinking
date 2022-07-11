@@ -1,11 +1,18 @@
 import platform
 from datetime import datetime
+from datetime import timedelta
 
 import discord
 import psutil
 from discord.ext import commands
 
 from . import utils
+import sys
+
+sys.path.append("..")
+from config import config
+import wavelink
+import humanize
 
 
 class Stuff(
@@ -22,7 +29,7 @@ class Stuff(
     def display_emoji(self):
         return "💭"
 
-    @commands.command(name="credits", aliases=["c"])
+    @commands.hybrid_command(name="credits", aliases=["c"])
     async def credits(self, ctx):
         """
         Shows the credits.
@@ -32,15 +39,14 @@ class Stuff(
         )
 
         embed.add_field(name="Creator", value="[Unpredictable#9443] ")
-        embed.add_field(name="Contributors", value="[Snaky#9214] for idea")
         embed.add_field(
             name="The bot is also open-source!",
-            value="https://github.com/timelessnesses/alphabet-count-bot",
+            value="https://github.com/timelessnesses/music-lavalink-bot",
         )
 
         await ctx.send(embed=embed)
 
-    @commands.command(name="ping", aliases=["p"])
+    @commands.hybrid_command(name="ping", aliases=["p"])
     async def ping(self, ctx):
         """
         Pong!
@@ -52,7 +58,7 @@ class Stuff(
         )
         await ctx.send(embed=embed)
 
-    @commands.command(name="status")
+    @commands.hybrid_command(name="status")
     async def status(self, ctx):
         """
         Status of bot like uptime, memory usage, etc.
@@ -71,6 +77,40 @@ class Stuff(
         embed.add_field(name="Discord.py", value=f"{discord.__version__}")
         embed.add_field(name="Bot version", value=f"{self.bot.version_}")
         await ctx.send(embed=embed)
+
+    @commands.hybrid_command(name="node_stats")
+    async def node_stats(self, ctx):
+        await wavelink.NodePool.create_node(
+            bot=self.bot,
+            host=config.lavalink_host,
+            port=int(config.lavalink_port),
+            password=config.lavalink_password,
+        )
+        node = wavelink.NodePool.get_node()
+        embed = discord.Embed(
+            title="Node Status for lavalink.rukchadisa.live",
+        )
+        embed.add_field(name="Connected", value=node.is_connected())
+        embed.add_field(name="Connected to", value="lavalink.rukchadisa.live")
+        embed.add_field(name="Lavalink's Server CPU Cores", value=node.stats.cpu_cores)
+        embed.add_field(
+            name="Lavalink's Uptime", value=timedelta(seconds=node.stats.uptime)
+        )
+        embed.add_field(name="Lavalink's occupied players", value=node.stats.players)
+        embed.add_field(
+            name="Lavalink's playing players", value=node.stats.playing_players
+        )
+        embed.add_field(
+            name="Lavalink's Memory Free",
+            value=humanize.naturalsize(node.stats.memory_free, binary=True),
+        )
+        embed.add_field(
+            name="Lavalink's Memory Used",
+            value=humanize.naturalsize(node.stats.memory_used, binary=True),
+        )
+        embed.add_field(name="Lavalink's Server load", value=node.stats.lavalink_load)
+        await ctx.send(embed=embed)
+        await wavelink.NodePool.get_node().disconnect()
 
 
 async def setup(bot):

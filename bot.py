@@ -14,8 +14,6 @@ import subprocess
 import traceback
 from config import config
 
-db = sqlite3.connect("database.sqlite3")
-
 formatting = logging.Formatter("[%(asctime)s] - [%(levelname)s] [%(name)s] %(message)s")
 
 logging.basicConfig(
@@ -41,7 +39,6 @@ logging.getLogger("discord").setLevel(logging.WARNING)  # mute
 
 bot = commands.Bot(command_prefix=config.prefix, intents=discord.Intents.all())
 bot.log = log
-bot.db = db
 
 observer = Observer()
 
