@@ -1,18 +1,18 @@
 import platform
-from datetime import datetime
-from datetime import timedelta
+import sys
+from datetime import datetime, timedelta
 
 import discord
 import psutil
 from discord.ext import commands
 
 from . import utils
-import sys
 
 sys.path.append("..")
-from config import config
-import wavelink
 import humanize
+import wavelink
+
+from config import config
 
 
 class Stuff(

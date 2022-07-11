@@ -1,11 +1,11 @@
-import wavelink
-from wavelink.ext import spotify
-import discord
-from discord.ext import commands
-import asyncio
-from dotenv import load_dotenv
-from datetime import timedelta
 import sys
+from datetime import timedelta
+
+import discord
+import wavelink
+from discord.ext import commands
+from dotenv import load_dotenv
+from wavelink.ext import spotify
 
 sys.path.append("..")
 from config import config
@@ -66,7 +66,6 @@ class Music(commands.Cog):
         """
         Music group commands
         """
-        pass
 
     @music.command()
     async def join(
