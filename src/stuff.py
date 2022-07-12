@@ -1,18 +1,18 @@
 import platform
-from datetime import datetime
-from datetime import timedelta
+import sys
+from datetime import datetime, timedelta
 
 import discord
 import psutil
 from discord.ext import commands
 
 from . import utils
-import sys
 
 sys.path.append("..")
-from config import config
-import wavelink
 import humanize
+import wavelink
+
+from config import config
 
 
 class Stuff(
@@ -94,7 +94,7 @@ class Stuff(
         embed.add_field(name="Connected to", value="lavalink.rukchadisa.live")
         embed.add_field(name="Lavalink's Server CPU Cores", value=node.stats.cpu_cores)
         embed.add_field(
-            name="Lavalink's Uptime", value=timedelta(seconds=node.stats.uptime)
+            name="Lavalink's Uptime", value=timedelta(milliseconds=node.stats.uptime)
         )
         embed.add_field(name="Lavalink's occupied players", value=node.stats.players)
         embed.add_field(

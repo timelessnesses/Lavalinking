@@ -27,6 +27,7 @@ autoflake = "^1.4"
 flake8 = "^4.0.1"
 watchdog = "^2.1.9"
 pylint = "^2.14.3"
+mypy = "^0.961"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

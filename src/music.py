@@ -1,11 +1,12 @@
-import wavelink
-from wavelink.ext import spotify
-import discord
-from discord.ext import commands
-import asyncio
-from dotenv import load_dotenv
-from datetime import timedelta
 import sys
+import typing
+from datetime import timedelta
+
+import discord
+import wavelink
+from discord.ext import commands
+from dotenv import load_dotenv
+from wavelink.ext import spotify
 
 sys.path.append("..")
 from config import config
@@ -18,6 +19,10 @@ class Music(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.bot.loop.create_task(self.connect())
+        self.bindings: typing.Dict[
+            int,
+            typing.List[typing.Dict],
+        ] = {}
 
     async def connect(self):
         await self.bot.wait_until_ready()
@@ -43,6 +48,19 @@ class Music(commands.Cog):
     async def disconnect(self):
         await wavelink.NodePool.get_node().disconnect()
 
+    @commands.Cog.listener()
+    async def on_wavelink_track_start(
+        self, player: wavelink.Player, track: wavelink.Track
+    ):
+        guild = self.bindings[player.guild.id]
+        for binding in guild:
+            if binding["track"] == track:
+                channel = await self.bot.fetch_channel(binding["channel"])
+                if channel:
+                    await channel.send(
+                        embed=self.info(track, channel, binding["vc"].channel.mention)
+                    )
+
     async def cog_before_invoke(self, ctx: commands.Context):
         if not ctx.guild:
             return await ctx.send(
@@ -66,7 +84,6 @@ class Music(commands.Cog):
         """
         Music group commands
         """
-        pass
 
     @music.command()
     async def join(
@@ -115,47 +132,105 @@ class Music(commands.Cog):
         )
 
     @music.command()
-    async def play_youtube(
-        self, ctx: commands.Context, *, query: wavelink.YouTubeTrack
-    ):
+    async def play(self, ctx: commands.Context, query: str):
         """
         Play a song
         """
         if not ctx.voice_client:
-            player = await ctx.author.voice.channel.connect(cls=wavelink.Player)
+            vc = await ctx.author.voice.channel.connect(cls=wavelink.Player)
         else:
-            player = ctx.voice_client
+            vc = ctx.voice_client
+        track = await vc.node.get_tracks(query=url, cls=wavelink.Track)
+        if not track:
+            return await ctx.send(
+                embed=discord.Embed(
+                    title="Error",
+                    description="Could not find a track with that name.",
+                    color=discord.Color.red(),
+                )
+            )
+        await vc.play(track[0]) if not vc.is_playing() else vc.queue.put_wait(track[0])
         await ctx.send(
-            embed=discord.Embed(
-                title="Fetching",
-                description="Fetching data with query: {}".format(query),
-                color=discord.Color.yellow(),
+            embed=(
+                discord.Embed(
+                    title=f"Added {track[0].title} to the queue",
+                    color=discord.Color.green(),
+                )
             )
         )
-        current_music = await player.play(query, replace=False)
+        try:
+            self.bindings[ctx.guild.id].append(
+                {
+                    "track": track[0],
+                    "vc": vc,
+                    "requester": ctx.author,
+                    "channel": ctx.channel,
+                }
+            )
+        except (KeyError, AttributeError):
+            self.bindings[ctx.guild.id] = [
+                {
+                    "track": track[0],
+                    "vc": ctx.voice_client,
+                    "requester": ctx.author,
+                    "channel": ctx.channel,
+                }
+            ]
+
+    @music.command()
+    async def pause(self, ctx: commands.Context):
+        if not ctx.voice_client:
+            return await ctx.send(
+                embed=discord.Embed(
+                    title="Error",
+                    description="You must be in a voice channel to use this command.",
+                    color=discord.Color.red(),
+                )
+            )
+        if not ctx.voice_client.is_playing:
+            return await ctx.send(
+                embed=discord.Embed(
+                    title="Error",
+                    description="There is no song currently playing.",
+                    color=discord.Color.red(),
+                )
+            )
+        vc: wavelink.Player = ctx.voice_client
+        [await vc.pause() if vc.is_paused() else await vc.resume()]
         await ctx.send(
-            embed=self.info(current_music, ctx, ctx.author.voice.channel.mention)
+            embed=discord.Embed(
+                title=f"{'Paused' if vc.is_paused() else 'Resumed'}",
+                description=f"{'Paused' if vc.is_paused() else 'Resumed'} your song.",
+                color=discord.Color.green(),
+            )
         )
 
     @music.command()
-    async def play_spotify(self, ctx: commands.Context, *, query: spotify.SpotifyTrack):
-        """
-        Play a song
-        """
+    async def stop(self, ctx: commands.Context):
         if not ctx.voice_client:
-            player = await ctx.author.voice.channel.connect(cls=wavelink.Player)
-        else:
-            player = ctx.voice_client
+            return await ctx.send(
+                embed=discord.Embed(
+                    title="Error",
+                    description="You must be in a voice channel to use this command.",
+                    color=discord.Color.red(),
+                )
+            )
+        if not ctx.voice_client.is_playing:
+            return await ctx.send(
+                embed=discord.Embed(
+                    title="Error",
+                    description="There is no song currently playing.",
+                    color=discord.Color.red(),
+                )
+            )
+        vc: wavelink.Player = ctx.voice_client
+        await vc.stop()
         await ctx.send(
             embed=discord.Embed(
-                title="Fetching",
-                description="Fetching data with query: {}".format(query),
-                color=discord.Color.yellow(),
+                title="Stopped",
+                description="Stopped your song.",
+                color=discord.Color.green(),
             )
-        )
-        current_music = await player.play(query, replace=False)
-        await ctx.send(
-            embed=self.info(current_music, ctx, ctx.author.voice.channel.mention)
         )
 
     def info(self, current_music: wavelink.Track, ctx: commands.Context, vc: str):

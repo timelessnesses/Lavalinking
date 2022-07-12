@@ -9,9 +9,9 @@ import asyncio
 import datetime
 import logging
 import os
-import sqlite3
 import subprocess
 import traceback
+
 from config import config
 
 formatting = logging.Formatter("[%(asctime)s] - [%(levelname)s] [%(name)s] %(message)s")
