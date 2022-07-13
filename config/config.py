@@ -4,7 +4,7 @@ load_dotenv()
 import os
 
 token = os.getenv("MUSIC_TOKEN")
-prefix = ""
+prefix = "m1"
 spotify_client_id = os.getenv("MUSIC_SPOTIFY_CLIENT_ID")
 spotify_client_secret = os.getenv("MUSIC_SPOTIFY_CLIENT_SECRET")
 lavalink_host = os.getenv("MUSIC_LAVALINK_HOST")
