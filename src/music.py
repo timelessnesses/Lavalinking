@@ -119,9 +119,19 @@ class Music(commands.Cog):
             del self.wait_for_delete[track]
         except KeyError:
             pass
-        next = await player.queue.get_wait()
-        if next:
-            await player.play(next)
+        try:
+            loop = player.loop
+        except AttributeError:
+            loop = Type_Loop.NONE
+            player.loop = loop
+        if loop:
+            if loop == Type_Loop.SONG:
+                await player.play(track)
+
+        else:
+            next = await player.queue.get_wait()
+            if next:
+                await player.play(next)
 
     @tasks.loop(seconds=0.8)
     async def loop_time_update(
