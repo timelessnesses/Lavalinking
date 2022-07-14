@@ -14,7 +14,6 @@ sys.path.append("..")
 from config import config
 
 load_dotenv()
-import os
 
 
 class Type_Loop(enum.Enum):
