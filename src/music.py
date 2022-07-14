@@ -1,8 +1,9 @@
+import asyncio
 import enum
 import sys
 import typing
 from datetime import timedelta
-import asyncio
+
 import discord
 import wavelink
 from discord.ext import commands, tasks
