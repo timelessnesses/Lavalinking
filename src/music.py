@@ -54,9 +54,7 @@ class Music(commands.Cog):
     async def connect(self):
         await self.bot.wait_until_ready()
         client: wavelink.ext.spotify.SpotifyClient = None
-        if os.getenv("MUSIC_SPOTIFY_CLIENT_ID") and os.getenv(
-            "MUSIC_SPOTIFY_CLIENT_SECRET"
-        ):
+        if config.spotify_client_id and config.spotify_client_secret:
             client = spotify.SpotifyClient(
                 client_id=config.spotify_client_id,
                 client_secret=config.spotify_client_secret,
@@ -620,7 +618,7 @@ class Music(commands.Cog):
                 )
             )
         vc: wavelink.Player = ctx.voice_client
-        queue = [x.title async for x in vc.queue]
+        queue = [x.title for x in vc.queue]
         print(queue)
         if not queue:
             return await ctx.send(
