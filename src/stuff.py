@@ -80,6 +80,9 @@ class Stuff(
 
     @commands.hybrid_command(name="node_stats")
     async def node_stats(self, ctx):
+        """
+        Shows the lavalink stats.
+        """
         await wavelink.NodePool.create_node(
             bot=self.bot,
             host=config.lavalink_host,
@@ -91,7 +94,7 @@ class Stuff(
             title="Node Status for lavalink.rukchadisa.live",
         )
         embed.add_field(name="Connected", value=node.is_connected())
-        embed.add_field(name="Connected to", value="lavalink.rukchadisa.live")
+        embed.add_field(name="Connected to", value=config.lavalink_host)
         embed.add_field(name="Lavalink's Server CPU Cores", value=node.stats.cpu_cores)
         embed.add_field(
             name="Lavalink's Uptime", value=timedelta(milliseconds=node.stats.uptime)

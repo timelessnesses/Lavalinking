@@ -97,6 +97,7 @@ class Music(commands.Cog):
                     embed=await self.info(track, ctx, binding["vc"])
                 )
                 self.loop_time_update.start(track, msg, ctx, binding["vc"])
+                self.wait_for_delete[track] = msg
                 while not binding["vc"].position in [0, track.duration]:
                     await asyncio.sleep(1)
                 self.loop_time_update.cancel()
@@ -105,14 +106,23 @@ class Music(commands.Cog):
     async def on_wavelink_track_end(
         self, player: wavelink.Player, track: wavelink.Track, reason: str
     ):
-        msg = self.wait_for_delete[track]
+        try:
+            msg = self.wait_for_delete[track]
+        except KeyError:
+            return
         await msg.channel.send(
             embed=discord.Embed(
                 title="Track ended", description=f"Server Reason: {reason}"
             )
         )
         await msg.delete()
-        del self.wait_for_delete[track]
+        try:
+            del self.wait_for_delete[track]
+        except KeyError:
+            pass
+        next = await player.queue.get_wait()
+        if next:
+            await player.play(next)
 
     @tasks.loop(seconds=0.8)
     async def loop_time_update(
@@ -128,30 +138,36 @@ class Music(commands.Cog):
             pass
 
     async def cog_before_invoke(self, ctx: commands.Context):
+        await ctx.defer()
         if not ctx.guild:
-            return await ctx.send(
+            await ctx.send(
                 embed=discord.Embed(
                     title="Error",
                     description="This command can only be used in a server.",
                     color=discord.Color.red(),
                 )
             )
+            raise commands.CommandError("This command can only be used in a server.")
         if not ctx.author.voice:
-            return await ctx.send(
+            await ctx.send(
                 embed=discord.Embed(
                     title="Error",
                     description="You must be in a voice channel to use this command.",
                     color=discord.Color.red(),
                 )
             )
+            raise commands.CommandError(
+                "You must be in a voice channel to use this command."
+            )
         if not ctx.voice_client and not ctx.invoked_with in ["play", "join", ""]:
-            return await ctx.send(
+            await ctx.send(
                 embed=discord.Embed(
                     title="Error",
                     description="I am not in a voice channel.",
                     color=discord.Color.red(),
                 )
             )
+            raise commands.CommandError("I am not in a voice channel.")
 
     @commands.hybrid_group()
     async def music(self, ctx: commands.Context):
@@ -326,6 +342,9 @@ class Music(commands.Cog):
 
     @music.command()
     async def pause(self, ctx: commands.Context):
+        """
+        Pause the music
+        """
         if not ctx.author.voice.channel:
             return await ctx.send(
                 embed=discord.Embed(
@@ -354,6 +373,9 @@ class Music(commands.Cog):
 
     @music.command()
     async def stop(self, ctx: commands.Context):
+        """
+        Stop the music
+        """
         if not ctx.author.voice.channel:
             return await ctx.send(
                 embed=discord.Embed(
@@ -383,6 +405,10 @@ class Music(commands.Cog):
 
     @music.command()
     async def loop(self, ctx: commands.Context, type: Type_Loop):
+        """
+        Loop the current song or entire queue (under development)
+        """
+
         if not ctx.author.voice.channel:
             return await ctx.send(
                 embed=discord.Embed(
@@ -418,6 +444,9 @@ class Music(commands.Cog):
 
     @music.command()
     async def volume(self, ctx: commands.Context, volume: int = None):
+        """
+        Change the volume of the music (0-500)
+        """
         if not ctx.author.voice.channel:
             return await ctx.send(
                 embed=discord.Embed(
@@ -463,6 +492,9 @@ class Music(commands.Cog):
 
     @music.command()
     async def skip(self, ctx: commands.Context):
+        """
+        Skip the current song
+        """
         if not ctx.author.voice.channel:
             return await ctx.send(
                 embed=discord.Embed(
@@ -547,6 +579,9 @@ class Music(commands.Cog):
 
     @music.command()
     async def now(self, ctx: commands.Context):
+        """
+        Get the current song
+        """
         if not ctx.author.voice.channel:
             return await ctx.send(
                 embed=discord.Embed(
@@ -585,7 +620,8 @@ class Music(commands.Cog):
                 )
             )
         vc: wavelink.Player = ctx.voice_client
-        if not vc.queue.q:
+        queue = [x.title async for x in vc.queue]
+        if not queue:
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
@@ -593,7 +629,6 @@ class Music(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
-        queue = [x.title async for x in vc.queue]
         count = 1
         embed = discord.Embed(
             title="Queue",
@@ -606,7 +641,6 @@ class Music(commands.Cog):
             embed.add_field(name=f"{count}", value=f"{x}")
             count += 1
         await ctx.send(embed=embed)
-
 
     async def info(
         self, current_music: wavelink.Track, ctx: commands.Context, vc: wavelink.Player

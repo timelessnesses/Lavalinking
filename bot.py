@@ -36,6 +36,7 @@ f.setFormatter(formatting)
 log.addHandler(f)
 
 logging.getLogger("discord").setLevel(logging.WARNING)  # mute
+logging.getLogger("wavelink").setLevel(logging.WARNING)
 
 bot = commands.Bot(command_prefix=config.prefix, intents=discord.Intents.all())
 bot.log = log
