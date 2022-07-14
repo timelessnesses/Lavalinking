@@ -621,6 +621,7 @@ class Music(commands.Cog):
             )
         vc: wavelink.Player = ctx.voice_client
         queue = [x.title async for x in vc.queue]
+        print(queue)
         if not queue:
             return await ctx.send(
                 embed=discord.Embed(
