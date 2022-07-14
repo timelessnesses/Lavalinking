@@ -21,21 +21,9 @@ class Type_Loop(enum.Enum):
     Enum for the loop type.
     """
 
-    NONE = 0
-    SONG = 1
-    QUEUE = 2
-
-
-class Type_Query(enum.Enum):
-    """
-    Enum for the query type.
-    """
-
-    SPOTIFY = 0
-    YOUTUBE = 1
-    YOUTUBE_PLAYLIST = 2
-    SPOTIFY_PLAYLIST = 3
-    SOUNDCLOUD = 4
+    NONE = "NONE"
+    SONG = "SONG"
+    QUEUE = "QUEUE"
 
 
 class Alternative_Context:
@@ -99,6 +87,7 @@ class Music(commands.Cog):
                 while not binding["vc"].position in [0, track.duration]:
                     await asyncio.sleep(1)
                 self.loop_time_update.cancel()
+                break
 
     @commands.Cog.listener()
     async def on_wavelink_track_end(
@@ -107,6 +96,7 @@ class Music(commands.Cog):
         try:
             msg = self.wait_for_delete[track]
         except KeyError:
+            print("no message to delete")
             return
         await msg.channel.send(
             embed=discord.Embed(
@@ -118,21 +108,22 @@ class Music(commands.Cog):
             del self.wait_for_delete[track]
         except KeyError:
             pass
+
         try:
             loop = player.loop
         except AttributeError:
             loop = Type_Loop.NONE
             player.loop = loop
-        if loop:
+        if loop != Type_Loop.NONE:
             if loop == Type_Loop.SONG:
                 await player.play(track)
 
         else:
-            next = await player.queue.get_wait()
-            if next:
-                await player.play(next)
+            next_ = await player.queue.get_wait()
+            if next_:
+                await player.play(next_)
 
-    @tasks.loop(seconds=0.8)
+    @tasks.loop(seconds=1)
     async def loop_time_update(
         self,
         track: wavelink.Track,
@@ -370,7 +361,7 @@ class Music(commands.Cog):
                 )
             )
         vc: wavelink.Player = ctx.voice_client
-        [await vc.pause() if vc.is_paused() else await vc.resume()]
+        [await vc.pause() if not vc.is_paused() else await vc.resume()]
         await ctx.send(
             embed=discord.Embed(
                 title=f"{'Paused' if vc.is_paused() else 'Resumed'}",
@@ -435,14 +426,27 @@ class Music(commands.Cog):
             )
         vc: wavelink.Player = ctx.voice_client
         if type == Type_Loop.SONG:
-            setattr(vc, "loop", True if not getattr(vc, "loop") else False)
+            try:
+                vc.loop = (
+                    Type_Loop.SONG if not vc.loop == Type_Loop.SONG else Type_Loop.NONE
+                )
+            except AttributeError:
+                vc.loop = Type_Loop.SONG
             await ctx.send(
                 embed=discord.Embed(
-                    title=f"{'Turned on' if getattr(vc, 'loop') else 'Turned off'} loop",
-                    description=f"{'Turned on' if getattr(vc, 'loop') else 'Turned off'} loop for your song.",
+                    title=f"{'Turned on' if vc.loop == Type_Loop.SONG else 'Turned off'} loop",
+                    description=f"{'Turned on' if vc.loop == Type_Loop.SONG else 'Turned off'} loop for your song.",
                 )
             )
         elif type == Type_Loop.QUEUE:
+            try:
+                vc.loop = (
+                    Type_Loop.QUEUE
+                    if not vc.loop == Type_Loop.QUEUE
+                    else Type_Loop.NONE
+                )
+            except AttributeError:
+                vc.loop = Type_Loop.QUEUE
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
@@ -536,8 +540,8 @@ class Music(commands.Cog):
         if requester is None:
             requester = "Unknown"
         if not requester.id != ctx.author.id:
-            next = vc.queue.get_wait()
-            if not next:
+            next_ = await vc.queue.get_wait()
+            if not next_:
                 return await ctx.send(
                     embed=discord.Embed(
                         title="Error",
@@ -545,7 +549,7 @@ class Music(commands.Cog):
                         color=discord.Color.red(),
                     )
                 )
-            await vc.play(next)
+            await vc.play(next_)
             await ctx.send(
                 embed=discord.Embed(
                     title="Skipped",
@@ -565,8 +569,8 @@ class Music(commands.Cog):
                     )
                 )
             if len(self.skip_votes[ctx.guild.id]) >= 2:
-                next = vc.queue.get_wait()
-                if not next:
+                next_ = vc.queue.get_wait()
+                if not next_:
                     return await ctx.send(
                         embed=discord.Embed(
                             title="Error",
@@ -574,7 +578,7 @@ class Music(commands.Cog):
                             color=discord.Color.red(),
                         )
                     )
-                await vc.play(next)
+                await vc.play(next_)
                 await ctx.send(
                     embed=discord.Embed(
                         title="Skipped",
