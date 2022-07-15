@@ -35,9 +35,7 @@ class Music(commands.Cog):
         self.bot = bot
         self.bot.loop.create_task(self.connect())
         self.bindings: typing.Dict[int, typing.List[typing.Dict]] = {}
-        self.loop_queue_list: typing.Dict[int, typing.List[typing.Dict]] = {}
         self.skip_votes: typing.Dict[int, typing.List[discord.Member]] = {}
-        self.wait_for_delete: typing.Dict[wavelink.Track, discord.Message] = {}
 
     async def connect(self):
         await self.bot.wait_until_ready()
@@ -68,10 +66,10 @@ class Music(commands.Cog):
     async def on_wavelink_track_start(
         self, player: wavelink.Player, track: wavelink.Track
     ):
-
         guild = self.bindings[player.guild.id]
         for binding in guild:
             if binding["track"].id == track.id:
+                binding.copy()
                 print("found track")
                 channel = binding["channel"]
                 ctx = Alternative_Context()
@@ -83,18 +81,24 @@ class Music(commands.Cog):
                     embed=await self.info(track, ctx, binding["vc"])
                 )
                 self.loop_time_update.start(track, msg, ctx, binding["vc"])
-                self.wait_for_delete[track] = msg
+                binding["msg"] = msg
+
                 while not binding["vc"].position in [0, track.duration]:
                     await asyncio.sleep(1)
                 self.loop_time_update.cancel()
                 break
+        self.bindings[player.guild.id].remove(old_binding)
+        self.bindings[player.guild.id].append(binding)
 
     @commands.Cog.listener()
     async def on_wavelink_track_end(
         self, player: wavelink.Player, track: wavelink.Track, reason: str
     ):
         try:
-            msg = self.wait_for_delete[track]
+            guild = self.bindings[player.guild.id]
+            for binding in guild:
+                if binding["track"].id == track.id:
+                    msg = binding["msg"]
         except KeyError:
             print("no message to delete")
             return
