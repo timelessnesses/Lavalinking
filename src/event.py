@@ -1,11 +1,11 @@
 import difflib
 import io
 import sys
+import traceback
 
-from discord.utils import MISSING
 import discord
 from discord.ext import commands
-import traceback
+from discord.utils import MISSING
 
 
 class Events(commands.Cog):
