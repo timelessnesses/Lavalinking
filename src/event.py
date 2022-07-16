@@ -2,6 +2,9 @@ import difflib
 import sys
 import io
 from discord.utils import MISSING
+import discord
+from discord.ext import commands
+import traceback
 
 
 class Events(commands.Cog):
