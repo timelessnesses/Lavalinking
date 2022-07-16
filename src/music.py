@@ -68,11 +68,10 @@ class Music(commands.Cog):
         self, player: wavelink.Player, track: wavelink.Track
     ):
         guild = self.bindings[player.guild.id]
-        old_binding = None
         count = 0
         for binding in guild:
             if binding["track"].id == track.id:
-                old_binding = binding.copy()
+                binding.copy()
                 channel = binding["channel"]
                 ctx = Alternative_Context()
                 ctx.send = channel.send
