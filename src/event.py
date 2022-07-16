@@ -1,6 +1,7 @@
 import difflib
-import sys
 import io
+import sys
+
 from discord.utils import MISSING
 import discord
 from discord.ext import commands
