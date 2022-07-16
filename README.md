@@ -55,16 +55,16 @@ lavalink_is_https = True or False based on if you use https or not
 
 ## Features
 
-[x] Using lavalink
-[x] Spotify supports
-[x] Youtube supports
-[x] Soundcloud supports
-[x] Music queue
-[x] Music loop
-[x] Skipping
-[x] Volume control
-[x] Music search
-[x] Live time update (Every Seconds)
-[ ] Filters
-[ ] Loop queues
-[ ] Skip votes
+- [x] Using lavalink
+- [x] Spotify supports
+- [x] Youtube supports
+- [x] Soundcloud supports
+- [x] Music queue
+- [x] Music loop
+- [x] Skipping
+- [x] Volume control
+- [x] Music search
+- [x] Live time update (Every Seconds)
+- [ ] Filters
+- [ ] Loop queues
+- [ ] Skip votes
