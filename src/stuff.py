@@ -11,7 +11,7 @@ from . import utils
 sys.path.append("..")
 import humanize
 import wavelink
-
+from wavelink.ext import spotify
 from config import config
 
 
@@ -83,21 +83,29 @@ class Stuff(
         """
         Shows the lavalink stats.
         """
+        client: wavelink.ext.spotify.SpotifyClient = None
+        if config.spotify_client_id and config.spotify_client_secret:
+            client = spotify.SpotifyClient(
+                client_id=config.spotify_client_id,
+                client_secret=config.spotify_client_secret,
+            )
         await wavelink.NodePool.create_node(
             bot=self.bot,
             host=config.lavalink_host,
             port=int(config.lavalink_port),
             password=config.lavalink_password,
+            spotify_client=client,
         )
         node = wavelink.NodePool.get_node()
         embed = discord.Embed(
-            title="Node Status for lavalink.rukchadisa.live",
+            title=f"Node Status for {config.lavalink_host}",
         )
         embed.add_field(name="Connected", value=node.is_connected())
         embed.add_field(name="Connected to", value=config.lavalink_host)
         embed.add_field(name="Lavalink's Server CPU Cores", value=node.stats.cpu_cores)
         embed.add_field(
-            name="Lavalink's Uptime", value=timedelta(milliseconds=node.stats.uptime)
+            name="Lavalink's Uptime",
+            value=timedelta(milliseconds=round(node.stats.uptime, 2)),
         )
         embed.add_field(name="Lavalink's occupied players", value=node.stats.players)
         embed.add_field(
@@ -111,7 +119,10 @@ class Stuff(
             name="Lavalink's Memory Used",
             value=humanize.naturalsize(node.stats.memory_used, binary=True),
         )
-        embed.add_field(name="Lavalink's Server load", value=node.stats.lavalink_load)
+        embed.add_field(
+            name="Lavalink's Server load",
+            value=f"{round(node.stats.lavalink_load,3)* 100}%",
+        )
         await ctx.send(embed=embed)
         await wavelink.NodePool.get_node().disconnect()
 

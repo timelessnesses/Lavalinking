@@ -3,6 +3,8 @@ import discord
 from discord.ext import commands
 import difflib
 import sys
+import io
+from discord.utils import MISSING
 
 
 class Events(commands.Cog):
@@ -16,6 +18,10 @@ class Events(commands.Cog):
             traceback.format_exception(type(error), error, error.__traceback__)
         )
         discord_version = discord.__version__
+        file = MISSING
+        if len(error_message) <= 4096:
+            file = discord.File(io.StringIO(error_message), filename="errorlog.py")
+            error_message = "Error is too long consider reading the errorlog.py file."
         if isinstance(error, commands.CommandNotFound):
             matches = difflib.get_close_matches(ctx.bot.commands, ctx.invoked_with)
             if len(matches) >= 2:
@@ -81,7 +87,9 @@ class Events(commands.Cog):
                 embed=(
                     (
                         discord.Embed(
-                            title="Error", description=error_message, color=0xFF0000
+                            title="Error",
+                            description=f"```py\n{error_message}\n```",
+                            color=0xFF0000,
                         )
                     ).add_field(
                         name="Python Version",
@@ -90,7 +98,8 @@ class Events(commands.Cog):
                     )
                 ).add_field(
                     name="Discord.py Version", value=discord_version, inline=True
-                )
+                ),
+                file=file,
             )
 
 

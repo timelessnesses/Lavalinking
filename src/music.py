@@ -89,6 +89,7 @@ class Music(commands.Cog):
                 self.loop_time_update.cancel()
                 break
             count += 1
+
         if player.loop != Type_Loop.NONE:
             self.bindings[player.guild.id].pop(count)
         self.bindings[player.guild.id].append(binding)
@@ -256,6 +257,7 @@ class Music(commands.Cog):
                         color=discord.Color.red(),
                     )
                 )
+        vc.loop = Type_Loop.NONE
         try:
             track = (
                 await wavelink.YouTubeTrack.search(query)
@@ -461,6 +463,22 @@ class Music(commands.Cog):
                 embed=discord.Embed(
                     title="Error",
                     description="Looping the queue is not supported yet.",
+                )
+            )
+        elif type == Type_Loop.NONE:
+            vc.loop = Type_Loop.NONE
+            await ctx.send(
+                embed=discord.Embed(
+                    title="Turned off loop",
+                    description="Turned off loop for your song.",
+                )
+            )
+            return
+        else:
+            return await ctx.send(
+                embed=discord.Embed(
+                    title="Error",
+                    description="Invalid loop type.",
                 )
             )
 
@@ -686,6 +704,7 @@ class Music(commands.Cog):
                 thumbnail = current_music.thumb
             except AttributeError:
                 thumbnail = None
+        i = f"{int(((vc.position / current_music.duration) * 100))}%"
         return (
             discord.Embed(
                 title="Now Playing",
@@ -705,7 +724,7 @@ class Music(commands.Cog):
             )
             .add_field(
                 name="Currently at",
-                value=str(timedelta(seconds=vc.position)),
+                value=str(timedelta(seconds=int(vc.position))),
                 inline=True,
             )
             .add_field(
@@ -714,6 +733,7 @@ class Music(commands.Cog):
             )
             .add_field(name="Author", value=current_music.author, inline=True)
             .add_field(name="URL", value=current_music.uri, inline=True)
+            .add_field(name="Progress", value=i)
         )
 
 
