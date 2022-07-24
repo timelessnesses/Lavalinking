@@ -104,7 +104,9 @@ class Music(commands.Cog):
         msg = binding["msg"]
         await msg.channel.send(
             embed=discord.Embed(
-                title="Track ended", description=f"Server Reason: {reason}"
+                title="Track ended",
+                description=f"Server Reason: {reason}",
+                delete_after=5,
             )
         )
         await msg.delete()
@@ -256,6 +258,7 @@ class Music(commands.Cog):
                         color=discord.Color.red(),
                     )
                 )
+        print("hi", vc)
         vc.loop = Type_Loop.NONE
         try:
             track = (
@@ -403,6 +406,7 @@ class Music(commands.Cog):
                 )
             )
         vc: wavelink.Player = ctx.voice_client
+        vc.loop = Type_Loop.NONE
         await vc.stop()
         vc.queue.reset()
         await ctx.send(
@@ -733,6 +737,46 @@ class Music(commands.Cog):
             .add_field(name="Author", value=current_music.author, inline=True)
             .add_field(name="URL", value=current_music.uri, inline=True)
             .add_field(name="Progress", value=i)
+        )
+
+    @music.command()
+    async def remove(self, ctx: commands.Context, queue_index: int):
+
+        vc: wavelink.Player = ctx.voice_client
+        if not ctx.author.voice.channel:
+            return await ctx.send(
+                embed=discord.Embed(
+                    title="Error",
+                    description="You must be in a voice channel to use this command.",
+                    color=discord.Color.red(),
+                )
+            )
+        if not vc.is_playing():
+            return await ctx.send(
+                embed=discord.Embed(
+                    title="Error",
+                    description="There is no song currently playing.",
+                    color=discord.Color.red(),
+                )
+            )
+        if queue_index > len(vc.queue):
+            return await ctx.send(
+                embed=discord.Embed(
+                    title="Error",
+                    description="The queue index is out of range.",
+                    color=discord.Color.red(),
+                )
+            )
+        song = vc.queue[queue_index - 1]
+        del vc.queue[queue_index - 1]
+        await ctx.send(
+            embed=discord.Embed(
+                title="Removed",
+                description="Removed {} at index {} from the queue.".format(
+                    song, queue_index
+                ),
+                color=discord.Color.green(),
+            )
         )
 
 
