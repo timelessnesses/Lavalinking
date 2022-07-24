@@ -69,9 +69,9 @@ class Music(commands.Cog):
     ):
         guild = self.bindings[player.guild.id]
         count = 0
-        for binding in guild:
-            if binding["track"].id == track.id:
-                binding.copy()
+        for _binding in guild:
+            if _binding["track"].id == track.id:
+                binding = _binding.copy()
                 channel = binding["channel"]
                 ctx = Alternative_Context()
                 ctx.send = channel.send
