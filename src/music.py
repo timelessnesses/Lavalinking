@@ -37,6 +37,7 @@ class Music(commands.Cog):
         self.bot.loop.create_task(self.connect())
         self.bindings: typing.Dict[int, typing.List[typing.Dict]] = {}
         self.skip_votes: typing.Dict[int, typing.List[discord.Member]] = {}
+        self.now_playing: typing.Dict[int, typing.Dict]
 
     async def connect(self):
         await self.bot.wait_until_ready()
@@ -71,7 +72,6 @@ class Music(commands.Cog):
         count = 0
         for binding in guild:
             if binding["track"].id == track.id:
-                binding.copy()
                 channel = binding["channel"]
                 ctx = Alternative_Context()
                 ctx.send = channel.send
@@ -86,21 +86,19 @@ class Music(commands.Cog):
                 while not binding["vc"].position in [0, track.duration]:
                     await asyncio.sleep(1)
                 self.loop_time_update.cancel()
+                self.now_playing[player.guild.id] = binding.copy()
                 break
             count += 1
 
         if player.loop != Type_Loop.NONE:
             self.bindings[player.guild.id].pop(count)
-        self.bindings[player.guild.id].append(binding)
 
     @commands.Cog.listener()
     async def on_wavelink_track_end(
         self, player: wavelink.Player, track: wavelink.Track, reason: str
     ):
-        guild = self.bindings[player.guild.id]
-        for binding in guild:
-            if binding["track"].id == track.id:
-                break
+        binding = self.now_playing[player.guild.id]
+
         msg = binding["msg"]
         await msg.channel.send(
             embed=discord.Embed(
