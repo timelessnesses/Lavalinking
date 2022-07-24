@@ -98,9 +98,7 @@ class Music(commands.Cog):
         self, player: wavelink.Player, track: wavelink.Track, reason: str
     ):
         guild = self.bindings[player.guild.id]
-        for binding in guild:
-            if binding["track"].id == track.id:
-                break
+        binding = guild[-1]
         msg = binding["msg"]
         await msg.channel.send(
             embed=discord.Embed(
