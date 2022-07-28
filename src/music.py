@@ -83,11 +83,10 @@ class Music(commands.Cog):
                 )
                 self.loop_time_update.start(track, msg, ctx, binding["vc"])
                 binding["msg"] = msg
-
+                self.now_playing[player.guild.id] = binding.copy()
                 while not binding["vc"].position in [0, track.duration]:
                     await asyncio.sleep(1)
                 self.loop_time_update.cancel()
-                self.now_playing[player.guild.id] = binding.copy()
                 break
             count += 1
 
