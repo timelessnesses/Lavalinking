@@ -105,8 +105,9 @@ class Music(commands.Cog):
             embed=discord.Embed(
                 title="Track ended",
                 description=f"Server Reason: {reason}",
-                delete_after=5,
-            )
+            ),
+                
+            delete_after=5,
         )
             await msg.delete()
         except Exception as e:
