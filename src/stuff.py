@@ -23,6 +23,24 @@ class Stuff(
     Miscellaneous commands and stuffs that don't fit anywhere else.
     """
 
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        if message.author.bot:
+            return
+        if config.os.getenv("DEBUG", 0):
+            if not message.content.startswith("m1"):
+                return
+            if message.author.id != 890913140278181909:
+                await message.reply(
+                    embed=discord.Embed(
+                        title="Bot is currently in debug mode!",
+                        description="You will not be able to launch any command in debug mode right now! Please wait until bot is done debugging.",
+                        color=discord.Color.red(),
+                    )
+                )
+                return
+            await self.bot.process_commands(message)
+
     def __init__(self, bot):
         self.bot = bot
 
@@ -90,13 +108,6 @@ class Stuff(
                 client_id=config.spotify_client_id,
                 client_secret=config.spotify_client_secret,
             )
-        await wavelink.NodePool.create_node(
-            bot=self.bot,
-            host=config.lavalink_host,
-            port=int(config.lavalink_port),
-            password=config.lavalink_password,
-            spotify_client=client,
-        )
         node = wavelink.NodePool.get_node()
         embed = discord.Embed(
             title=f"Node Status for {config.lavalink_host}",
