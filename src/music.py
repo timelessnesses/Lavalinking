@@ -97,17 +97,21 @@ class Music(commands.Cog):
     async def on_wavelink_track_end(
         self, player: wavelink.Player, track: wavelink.Track, reason: str
     ):
-        binding = self.now_playing[player.guild.id]
+        try:
+            binding = self.now_playing[player.guild.id]
 
-        msg = binding["msg"]
-        await msg.channel.send(
+            msg = binding["msg"]
+            await msg.channel.send(
             embed=discord.Embed(
                 title="Track ended",
                 description=f"Server Reason: {reason}",
                 delete_after=5,
             )
         )
-        await msg.delete()
+            await msg.delete()
+        except Exception as e:
+            print(e)
+            
 
         try:
             loop = player.loop
