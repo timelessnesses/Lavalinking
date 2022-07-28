@@ -102,17 +102,15 @@ class Music(commands.Cog):
 
             msg = binding["msg"]
             await msg.channel.send(
-            embed=discord.Embed(
-                title="Track ended",
-                description=f"Server Reason: {reason}",
-            ),
-                
-            delete_after=5,
-        )
+                embed=discord.Embed(
+                    title="Track ended",
+                    description=f"Server Reason: {reason}",
+                ),
+                delete_after=5,
+            )
             await msg.delete()
         except Exception as e:
             print(e)
-            
 
         try:
             loop = player.loop
