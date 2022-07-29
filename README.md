@@ -65,6 +65,6 @@ lavalink_is_https = True or False based on if you use https or not
 - [x] Volume control
 - [x] Music search
 - [x] Live time update (Every Seconds)
+- [x] Skip votes
 - [ ] Filters
 - [ ] Loop queues
-- [ ] Skip votes
