@@ -136,7 +136,6 @@ class Stuff(
             value=f"{round(node.stats.lavalink_load,3)* 100}%",
         )
         await ctx.send(embed=embed)
-        await wavelink.NodePool.get_node().disconnect()
 
 
 async def setup(bot):
