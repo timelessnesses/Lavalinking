@@ -282,7 +282,9 @@ class Music(commands.Cog):
                 if not "list=" in query
                 else await wavelink.NodePool.get_node().get_playlist(
                     wavelink.YouTubePlaylist, query
-                ) if not "youtube.com" in query and not "list="  in query else ((await wavelink.NodePool.get_node().get_tracks(query)[0]))
+                )
+                if not "youtube.com" in query and not "list=" in query
+                else ((await wavelink.NodePool.get_node().get_tracks(query)[0]))
             )
         except wavelink.errors.LoadTrackError:
             return await ctx.send(
