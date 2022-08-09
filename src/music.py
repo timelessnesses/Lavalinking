@@ -277,15 +277,11 @@ class Music(commands.Cog):
                 )
         vc.loop = Type_Loop.NONE
         try:
-            track = (
-                await wavelink.YouTubeTrack.search(query)
-                if not "list=" in query
-                else await wavelink.NodePool.get_node().get_playlist(
-                    wavelink.YouTubePlaylist, query
-                )
-                if not "youtube.com" in query and not "list=" in query
-                else ((await wavelink.NodePool.get_node().get_tracks(query)[0]))
-            )
+            track = None
+            if "youtube.com" in query and "watch" in query: # youtube link
+                track = (await wavelink.NodePool.get_node().get_tracks(query,cls=wavelink.YouTubeTrack))[0]
+            else:
+                track = (await wavelink.YoutubeTrack.search(query))[0]
         except wavelink.errors.LoadTrackError:
             return await ctx.send(
                 embed=discord.Embed(
