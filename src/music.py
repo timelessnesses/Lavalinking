@@ -278,8 +278,12 @@ class Music(commands.Cog):
         vc.loop = Type_Loop.NONE
         try:
             track = None
-            if "youtube.com" in query and "watch" in query: # youtube link
-                track = (await wavelink.NodePool.get_node().get_tracks(query,cls=wavelink.YouTubeTrack))[0]
+            if "youtube.com" in query and "watch" in query:  # youtube link
+                track = (
+                    await wavelink.NodePool.get_node().get_tracks(
+                        query, cls=wavelink.YouTubeTrack
+                    )
+                )[0]
             else:
                 track = (await wavelink.YoutubeTrack.search(query))[0]
         except wavelink.errors.LoadTrackError:
