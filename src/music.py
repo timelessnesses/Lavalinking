@@ -281,7 +281,7 @@ class Music(commands.Cog):
             if "youtube.com" in query and "watch" in query:  # youtube link
                 track = (
                     await wavelink.NodePool.get_node().get_tracks(
-                        wavelink.YouTubeTrack,query
+                        wavelink.YouTubeTrack, query
                     )
                 )[0]
             else:
