@@ -181,7 +181,7 @@ class Music(commands.Cog):
                 )
             )
             raise commands.CommandError(
-                "You must be in a voice channel to use this command."
+B                "You must be in a voice channel to use this command."
             )
         if (
             not ctx.voice_client
@@ -277,15 +277,13 @@ class Music(commands.Cog):
                 )
         vc.loop = Type_Loop.NONE
         try:
-            track = None
-            if "youtube.com" in query and "watch" in query:  # youtube link
-                track = (
-                    await wavelink.NodePool.get_node().get_tracks(
-                        wavelink.YouTubeTrack,query
-                    )
-                )[0]
-            else:
-                track = (await wavelink.YoutubeTrack.search(query))[0]
+            track = (
+                await wavelink.YouTubeTrack.search(query)
+                if not "list=" in query
+                else await wavelink.NodePool.get_node().get_playlist(
+                    wavelink.YouTubePlaylist, query
+                )
+                if not "youtube.com" in que
         except wavelink.errors.LoadTrackError:
             return await ctx.send(
                 embed=discord.Embed(
@@ -347,7 +345,7 @@ class Music(commands.Cog):
             try:
                 self.bindings[ctx.guild.id].append(
                     {
-                        "track": track,
+                        "track": track[0],
                         "vc": vc,
                         "requester": ctx.author,
                         "channel": await ctx.guild.fetch_channel(ctx.channel.id),
@@ -356,19 +354,19 @@ class Music(commands.Cog):
             except (KeyError, AttributeError):
                 self.bindings[ctx.guild.id] = [
                     {
-                        "track": track,
+                        "track": track[0],
                         "vc": ctx.voice_client,
                         "requester": ctx.author,
                         "channel": await ctx.guild.fetch_channel(ctx.channel.id),
                     }
                 ]
 
-            await vc.play(track) if not vc.is_playing() else await vc.queue.put_wait(
-                track
+            await vc.play(track[0]) if not vc.is_playing() else await vc.queue.put_wait(
+                track[0]
             )
             await ctx.send(
                 embed=discord.Embed(
-                    title=f"Added {track.title} to the queue",
+                    title=f"Added {track[0].title} to the queue",
                     color=discord.Color.green(),
                 )
             )
@@ -548,7 +546,7 @@ class Music(commands.Cog):
         await ctx.send(
             embed=discord.Embed(
                 title="Volume",
-                description=f"The volume has been set to {vc.volume * 100}.",
+                description=f"The volume has been set to {vc.volume}.",
                 color=discord.Color.green(),
             )
         )
