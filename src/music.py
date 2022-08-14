@@ -114,6 +114,7 @@ class Music(commands.Cog):
                 await player.queue.get_wait()
         except asyncio.TimeoutError:
             self.skip_votes[player.guild.id] = []
+            await player.vc
         try:
             binding = self.now_playing[player.guild.id]
 
@@ -202,6 +203,10 @@ class Music(commands.Cog):
         """
         Music group commands
         """
+    
+    @commands.Cog.listener()
+    async def on_voice_state_update(self,member: discord.Member, before:discord.VoiceState, after:discord.VoiceState):
+        pass
 
     @music.command()
     async def join(
@@ -284,6 +289,20 @@ class Music(commands.Cog):
                         query, cls=wavelink.YouTubeTrack
                     )
                 )[0]
+            elif "spotify.com" in query and (not "playlist" in query or not "album" in query):
+                track = await spotify.SpotifyTrack.search(query, return_first=True)
+            elif "spotify.com" in query and (not "playlist" in query or not "album" in query):
+                track = await spotify.SpotifyTrack.search(query)
+            elif "youtube.com" in query and "list" in query:
+               track = (
+                    await wavelink.NodePool.get_node().get_tracks(
+                        query, cls=wavelink.YouTubePlaylist
+                    )
+                )
+            elif "soundcloud.com" in query and not "sets" in query:
+                track = wavelink.SoundCloudTrack.search(query, return_first=True)
+            elif "soundcloud.com" in query and "sets" in query:
+                track = wavelink.SoundCloudTrack.search(query)
             else:
                 track = (await wavelink.YoutubeTrack.search(query))[0]
         except wavelink.errors.LoadTrackError:
