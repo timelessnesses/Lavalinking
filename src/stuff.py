@@ -39,7 +39,6 @@ class Stuff(
                     )
                 )
                 return
-            await self.bot.process_commands(message)
 
     def __init__(self, bot):
         self.bot = bot

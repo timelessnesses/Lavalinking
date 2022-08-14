@@ -285,7 +285,7 @@ class Music(commands.Cog):
                     )
                 )[0]
             else:
-                track = (await wavelink.YoutubeTrack.search(query))[0]
+                track = (await wavelink.YouTubeTrack.search(query))[0]
         except wavelink.errors.LoadTrackError:
             return await ctx.send(
                 embed=discord.Embed(
