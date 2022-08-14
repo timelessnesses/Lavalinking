@@ -203,9 +203,14 @@ class Music(commands.Cog):
         """
         Music group commands
         """
-    
+
     @commands.Cog.listener()
-    async def on_voice_state_update(self,member: discord.Member, before:discord.VoiceState, after:discord.VoiceState):
+    async def on_voice_state_update(
+        self,
+        member: discord.Member,
+        before: discord.VoiceState,
+        after: discord.VoiceState,
+    ):
         pass
 
     @music.command()
@@ -289,15 +294,17 @@ class Music(commands.Cog):
                         wavelink.YouTubeTrack, query
                     )
                 )[0]
-            elif "spotify.com" in query and (not "playlist" in query or not "album" in query):
+            elif "spotify.com" in query and (
+                not "playlist" in query or not "album" in query
+            ):
                 track = await spotify.SpotifyTrack.search(query, return_first=True)
-            elif "spotify.com" in query and (not "playlist" in query or not "album" in query):
+            elif "spotify.com" in query and (
+                not "playlist" in query or not "album" in query
+            ):
                 track = await spotify.SpotifyTrack.search(query)
             elif "youtube.com" in query and "list" in query:
-               track = (
-                    await wavelink.NodePool.get_node().get_tracks(
-                        query, cls=wavelink.YouTubePlaylist
-                    )
+                track = await wavelink.NodePool.get_node().get_tracks(
+                    query, cls=wavelink.YouTubePlaylist
                 )
             elif "soundcloud.com" in query and not "sets" in query:
                 track = wavelink.SoundCloudTrack.search(query, return_first=True)
