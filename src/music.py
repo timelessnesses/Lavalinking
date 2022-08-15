@@ -16,6 +16,12 @@ from config import config
 
 load_dotenv()
 
+class Enum_Source(enum.Enum):
+    YouTube = "youtube"
+    SoundCloud = "soundcloud"
+    Spotify = "spotify"
+    YouTubePlaylist = "youtube playlist"
+    SpotifyPlaylist = "spotify playlist"
 
 class Type_Loop(enum.Enum):
     """
@@ -114,7 +120,7 @@ class Music(commands.Cog):
                 await player.queue.get_wait()
         except asyncio.TimeoutError:
             self.skip_votes[player.guild.id] = []
-            await player.vc
+            await player.stop()
         try:
             binding = self.now_playing[player.guild.id]
 
@@ -258,6 +264,7 @@ class Music(commands.Cog):
     async def play(
         self,
         ctx: commands.Context,
+        source: Enum_Source=Enum_Source.YouTube,
         *,
         query: str,
     ):
@@ -300,11 +307,20 @@ class Music(commands.Cog):
                     )
                 )
             elif "soundcloud.com" in query and not "sets" in query:
-                track = wavelink.SoundCloudTrack.search(query, return_first=True)
+                track = (await wavelink.NodePool.get_node().get_tracks(query=query, cls=wavelink.SoundCloudTrack))[0]
             elif "soundcloud.com" in query and "sets" in query:
-                track = wavelink.SoundCloudTrack.search(query)
+                track = await wavelink.NodePool.get_node().get_tracks(query=query, cls=wavelink.SoundCloudTrack)
             else:
-                track = (await wavelink.YouTubeTrack.search(query))[0]
+                if source == Enum_Source.YouTube:
+                    track = await wavelink.YouTubeTrack.search(query,return_first=True)
+                elif source == Enum_Source.SoundCloud:
+                    track = (await wavelink.SoundCloudTrack.search(query))[0]
+                elif source == Enum_Source.Spotify:
+                    track = await spotify.SpotifyTrack.search(query,return_first=True)
+                elif source == Enum_Source.SpotifyPlaylist:
+                    track = await spotify.SpotifyTrack.search(query)
+                elif source ==  Enum_Source.YouTubePlaylist:
+                    track = await wavelink.YouTubeTrack.search(query)
         except wavelink.errors.LoadTrackError:
             return await ctx.send(
                 embed=discord.Embed(
