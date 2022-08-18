@@ -166,7 +166,7 @@ class Music(commands.Cog):
         vc: wavelink.Player,
     ):
         try:
-           await msg.edit(embed=await self.info(track, ctx, vc))
+            await msg.edit(embed=await self.info(track, ctx, vc))
         except AttributeError:
             pass
 
