@@ -164,11 +164,11 @@ class Music(commands.Cog):
         vc: wavelink.Player,
     ):
         try:
-            await msg.edit(embed=await self.info(track, ctx, vc))
+           await msg.edit(embed=await self.info(track, ctx, vc))
         except AttributeError:
             pass
 
-    async def cog_before_invoke(self, ctx: commands.Context):
+    async def cog_check(self, ctx: commands.Context):
         await ctx.defer()
         if not ctx.guild:
             await ctx.send(
@@ -178,7 +178,7 @@ class Music(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
-            raise commands.CommandError("This command can only be used in a server.")
+            return False
         if not ctx.author.voice:
             await ctx.send(
                 embed=discord.Embed(
@@ -187,9 +187,7 @@ class Music(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
-            raise commands.CommandError(
-                "You must be in a voice channel to use this command."
-            )
+            return False
         if (
             not ctx.voice_client
             and not ctx.invoked_with in ["play", "join", ""]
@@ -202,7 +200,8 @@ class Music(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
-            raise commands.CommandError("I am not in a voice channel.")
+            return False
+        return True
 
     @commands.hybrid_group()
     async def music(self, ctx: commands.Context):
