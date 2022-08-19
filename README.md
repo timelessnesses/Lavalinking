@@ -68,3 +68,6 @@ lavalink_is_https = True or False based on if you use https or not
 - [x] Skip votes
 - [ ] Filters
 - [ ] Loop queues
+
+## Recommendations
+1. Please use this [lavalink jar file](https://github.com/davidffa/lavalink) for better results or find node that use this
