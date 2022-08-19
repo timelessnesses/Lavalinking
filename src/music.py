@@ -640,8 +640,6 @@ class Music(commands.Cog):
         if requester is None:
             requester = Alternative_Context()
             requester.id = None
-        requester = Alternative_Context()
-        requester.id = "someting becaus eyea"  # intentionally broken so i can test vote
         if not requester.id != ctx.author.id:
             try:
                 async with async_timeout.timeout(2):
