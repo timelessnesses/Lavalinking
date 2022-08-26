@@ -71,6 +71,7 @@ class Music(commands.Cog):
             password=config.lavalink_password,
             spotify_client=client,
         )
+        self.client = client
 
     def cog_unload(self):
         self.bot.loop.create_task(self.disconnect())
