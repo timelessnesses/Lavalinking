@@ -297,7 +297,16 @@ class Music(commands.Cog):
         vc.loop = Type_Loop.NONE
         try:
             track = None
-            if "youtube.com" in query and "watch" in query:  # youtube link
+            if ctx.message.attachments:
+                track = []
+                count = 1
+                for attachment in ctx.message.attachments:
+                    if "audio" not in attachment.content_type  or "video" not in attachment.content_type:
+                        await ctx.send(embed=discord.Embed(title='Error',description=f'Attachment number {count} has wrong content type'))
+                        continue
+                    count += 1
+                    track.append((await wavelink.NodePool.get_node().get_tracks(wavelink.Track,attachment.url)[0])
+            elif "youtube.com" in query and "watch" in query:  # youtube link
                 track = (
                     await wavelink.NodePool.get_node().get_tracks(
                         wavelink.YouTubeTrack, query
@@ -344,11 +353,11 @@ class Music(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
-        except wavelink.errors.LavalinkException:
+        except wavelink.errors.LavalinkException as e:
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
-                    description="Lavalink server error.",
+                    description=f"Lavalink server error.\n```py\nLavalinkException: {str(e)}\n```",
                     color=discord.Color.red(),
                 )
             )
@@ -360,7 +369,7 @@ class Music(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
-        if isinstance(track, (tuple, list)) and "list=" in query:
+        if isinstance(track, (tuple, list)):
             for track_ in track:
                 try:
                     self.bindings[ctx.guild.id].append(
