@@ -301,8 +301,8 @@ class Music(commands.Cog):
                 track = []
                 count = 1
                 for attachment in ctx.message.attachments:
-                    if "audio" not in attachment.content_type  or "video" not in attachment.content_type:
-                        await ctx.send(embed=discord.Embed(title='Error',description=f'Attachment number {count} has wrong content type'))
+                    if not "audio" in attachment.content_type  or not "video" in attachment.content_type:
+                        await ctx.send(embed=discord.Embed(title='Error',description=f'Attachment number {count} has wrong content type.\nSkipping'))
                         continue
                     count += 1
                     track.append((await wavelink.NodePool.get_node().get_tracks(wavelink.Track,attachment.url)[0]))
