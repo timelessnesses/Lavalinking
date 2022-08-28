@@ -305,7 +305,7 @@ class Music(commands.Cog):
                         await ctx.send(embed=discord.Embed(title='Error',description=f'Attachment number {count} has wrong content type'))
                         continue
                     count += 1
-                    track.append((await wavelink.NodePool.get_node().get_tracks(wavelink.Track,attachment.url)[0])
+                    track.append((await wavelink.NodePool.get_node().get_tracks(wavelink.Track,attachment.url)[0]))
             elif "youtube.com" in query and "watch" in query:  # youtube link
                 track = (
                     await wavelink.NodePool.get_node().get_tracks(
