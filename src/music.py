@@ -301,7 +301,7 @@ class Music(commands.Cog):
                 track = []
                 count = 1
                 for attachment in ctx.message.attachments:
-                    if not "audio" in attachment.content_type  or not "video" in attachment.content_type:
+                    if not "audio" in attachment.content_type.split('/')[0]  or not "video" in attachment.content_type.split('/')[0]:
                         await ctx.send(embed=discord.Embed(title='Error',description=f'Attachment number {count} has wrong content type.\nSkipping'))
                         continue
                     count += 1
