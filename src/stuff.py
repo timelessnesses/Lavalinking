@@ -1,7 +1,8 @@
+import asyncio
 import platform
 import sys
 from datetime import datetime, timedelta
-import asyncio
+
 import discord
 import psutil
 from discord.ext import commands
@@ -27,7 +28,7 @@ class Stuff(
     async def on_message(self, message: discord.Message):
         if message.author.bot:
             return
-        if config.os.getenv("DEBUG", "0") == "1" :
+        if config.os.getenv("DEBUG", "0") == "1":
             if not message.content.startswith("m1"):
                 return
             if message.author.id not in self.owners:
@@ -43,6 +44,7 @@ class Stuff(
     def __init__(self, bot):
         self.bot = bot
         self.bot.loop.create_task(self.find())
+
     async def find(self):
         await self.bot.wait_until_ready()
         await asyncio.sleep(2)
