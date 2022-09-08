@@ -49,6 +49,7 @@ class Stuff(
         self.owners = config.owners_id + list(self.bot.owner_ids)
         self.owners.append(self.bot.owner_id)
         self.owners = {int(id) for id in self.owners}
+
     @property
     def display_emoji(self):
         return "💭"
