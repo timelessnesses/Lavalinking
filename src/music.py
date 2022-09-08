@@ -34,10 +34,13 @@ class Type_Loop(enum.Enum):
     NONE = "none"
     SONG = "song"
     QUEUE = "queue"
+
+
 class Enum_Applications(enum.Enum):
     """
     Enum for application for together command
     """
+
     watch_together = "youtube"
     poker_night = "poker"
     chess_in_the_park = "chess"
@@ -52,6 +55,7 @@ class Enum_Applications(enum.Enum):
     putt_party = "putt-party"
     bobble_league = "bobble-league"
     ask_away = "ask-away"
+
 
 class Alternative_Context:
     def __init__(self, **kwargs):
@@ -212,8 +216,17 @@ class Music(commands.Cog):
             return False
         if (
             not ctx.voice_client
-            and not ctx.invoked_with in ["play", "join", ]
-            and ctx.invoked_with in [str(command) for command in self.music.commands if str(command) not in ["play","join"]]
+            and not ctx.invoked_with
+            in [
+                "play",
+                "join",
+            ]
+            and ctx.invoked_with
+            in [
+                str(command)
+                for command in self.music.commands
+                if str(command) not in ["play", "join"]
+            ]
         ):
             await ctx.send(
                 embed=discord.Embed(
@@ -320,11 +333,25 @@ class Music(commands.Cog):
                 track = []
                 count = 1
                 for attachment in ctx.message.attachments:
-                    if not "audio" in attachment.content_type.split('/')[0]  or not "video" in attachment.content_type.split('/')[0]:
-                        await ctx.send(embed=discord.Embed(title='Error',description=f'Attachment number {count} has wrong content type.\nSkipping'))
+                    if (
+                        not "audio" in attachment.content_type.split("/")[0]
+                        or not "video" in attachment.content_type.split("/")[0]
+                    ):
+                        await ctx.send(
+                            embed=discord.Embed(
+                                title="Error",
+                                description=f"Attachment number {count} has wrong content type.\nSkipping",
+                            )
+                        )
                         continue
                     count += 1
-                    track.append((await wavelink.NodePool.get_node().get_tracks(wavelink.Track,attachment.url)[0]))
+                    track.append(
+                        (
+                            await wavelink.NodePool.get_node().get_tracks(
+                                wavelink.Track, attachment.url
+                            )[0]
+                        )
+                    )
             elif "youtube.com" in query and "watch" in query:  # youtube link
                 track = (
                     await wavelink.NodePool.get_node().get_tracks(
@@ -906,11 +933,16 @@ class Music(commands.Cog):
                 color=discord.Color.green(),
             )
         )
+
     @music.command()
     async def together(self, ctx: commands.Context, application: Enum_Applications):
         await ctx.send(
-            embed=discord.Embed(title="Sucessfully created activity!",description=f"Click link below to started!\n{await self.together.create_link(ctx.author.voice.channel.id,application.value)}")
+            embed=discord.Embed(
+                title="Sucessfully created activity!",
+                description=f"Click link below to started!\n{await self.together.create_link(ctx.author.voice.channel.id,application.value)}",
+            )
         )
+
 
 async def setup(bot):
     await bot.add_cog(Music(bot))

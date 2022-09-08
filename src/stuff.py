@@ -27,7 +27,7 @@ class Stuff(
     async def on_message(self, message: discord.Message):
         if message.author.bot:
             return
-        if config.os.getenv("DEBUG", "0") is "1" :
+        if config.os.getenv("DEBUG", "0") is "1":
             if not message.content.startswith("m1"):
                 return
             if message.author.id not in self.owners:
@@ -45,6 +45,7 @@ class Stuff(
         self.owners = config.owners_id + list(self.bot.owner_ids)
         self.owners.append(self.bot.owner_id)
         self.owners = {int(id) for id in self.owners}
+
     @property
     def display_emoji(self):
         return "💭"

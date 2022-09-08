@@ -40,7 +40,11 @@ logging.getLogger("wavelink").setLevel(
     logging.WARNING
 )  # mute wavelink since debug is too loud
 
-bot = commands.AutoShardedBot(command_prefix=config.prefix, intents=discord.Intents.all(),owners_id=config.owners_id)
+bot = commands.AutoShardedBot(
+    command_prefix=config.prefix,
+    intents=discord.Intents.all(),
+    owners_id=config.owners_id,
+)
 bot.log = log
 
 observer = Observer()
