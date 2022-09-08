@@ -27,10 +27,10 @@ class Stuff(
     async def on_message(self, message: discord.Message):
         if message.author.bot:
             return
-        if config.os.getenv("DEBUG", 0):
+        if config.os.getenv("DEBUG", "0") is "1" :
             if not message.content.startswith("m1"):
                 return
-            if message.author.id != 890913140278181909:
+            if message.author.id not in self.owners:
                 await message.reply(
                     embed=discord.Embed(
                         title="Bot is currently in debug mode!",
@@ -42,7 +42,9 @@ class Stuff(
 
     def __init__(self, bot):
         self.bot = bot
-
+        self.owners = config.owners_id + list(self.bot.owner_ids)
+        self.owners.append(self.bot.owner_id)
+        self.owners = {int(id) for id in self.owners}
     @property
     def display_emoji(self):
         return "💭"

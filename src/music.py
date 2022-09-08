@@ -8,6 +8,7 @@ import async_timeout
 import discord
 import wavelink
 from discord.ext import commands, tasks
+from discord_together import DiscordTogether
 from dotenv import load_dotenv
 from wavelink.ext import spotify
 
@@ -30,10 +31,27 @@ class Type_Loop(enum.Enum):
     Enum for the loop type.
     """
 
-    NONE = "NONE"
-    SONG = "SONG"
-    QUEUE = "QUEUE"
-
+    NONE = "none"
+    SONG = "song"
+    QUEUE = "queue"
+class Enum_Applications(enum.Enum):
+    """
+    Enum for application for together command
+    """
+    watch_together = "youtube"
+    poker_night = "poker"
+    chess_in_the_park = "chess"
+    letter_league = "letter-league"
+    word_snack = "word-snack"
+    sketch_heads = "sketch-heads"
+    spellcast = "spellcast"
+    awkword = "awkword"
+    checkers_in_the_park = "checkers"
+    blazing_8s = "blazing-8s"
+    land_io = "land-io"
+    putt_party = "putt-party"
+    bobble_league = "bobble-league"
+    ask_away = "ask-away"
 
 class Alternative_Context:
     def __init__(self, **kwargs):
@@ -72,6 +90,7 @@ class Music(commands.Cog):
             spotify_client=client,
         )
         self.client = client
+        self.together = await DiscordTogether(config.token)
 
     def cog_unload(self):
         self.bot.loop.create_task(self.disconnect())
@@ -193,8 +212,8 @@ class Music(commands.Cog):
             return False
         if (
             not ctx.voice_client
-            and not ctx.invoked_with in ["play", "join", ""]
-            and ctx.invoked_with in [str(command) for command in self.music.commands]
+            and not ctx.invoked_with in ["play", "join", ]
+            and ctx.invoked_with in [str(command) for command in self.music.commands if str(command) not in ["play","join"]]
         ):
             await ctx.send(
                 embed=discord.Embed(
@@ -887,7 +906,11 @@ class Music(commands.Cog):
                 color=discord.Color.green(),
             )
         )
-
+    @music.command()
+    async def together(self, ctx: commands.Context, application: Enum_Applications):
+        await ctx.send(
+            embed=discord.Embed(title="Sucessfully created activity!",description=f"Click link below to started!\n{await self.together.create_link(ctx.author.voice.channel.id,application.value)}")
+        )
 
 async def setup(bot):
     await bot.add_cog(Music(bot))
