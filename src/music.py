@@ -11,7 +11,7 @@ from discord_together import DiscordTogether
 from dotenv import load_dotenv
 from wavelink.ext import spotify
 
-from .utils.enums import Enum_Source, Type_Loop, Enum_Applications, Enum_Filters
+from .utils.enums import Enum_Applications, Enum_Filters, Enum_Source, Type_Loop
 
 sys.path.append("..")
 from config import config
@@ -906,8 +906,9 @@ class Music(commands.Cog):
         )
 
     @music.command()
-    async def apply_single_filter(self,ctx: commands.Context, filters: Enum_Filters):
+    async def apply_single_filter(self, ctx: commands.Context, filters: Enum_Filters):
         pass
+
 
 async def setup(bot):
     await bot.add_cog(Music(bot))
