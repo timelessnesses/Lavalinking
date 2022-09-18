@@ -1,5 +1,4 @@
 import asyncio
-import enum
 import sys
 import typing
 from datetime import timedelta
@@ -12,49 +11,12 @@ from discord_together import DiscordTogether
 from dotenv import load_dotenv
 from wavelink.ext import spotify
 
+from .utils.enums import Enum_Source, Type_Loop, Enum_Applications, Enum_Filters
+
 sys.path.append("..")
 from config import config
 
 load_dotenv()
-
-
-class Enum_Source(enum.Enum):
-    YouTube = "youtube"
-    SoundCloud = "soundcloud"
-    Spotify = "spotify"
-    YouTubePlaylist = "youtube playlist"
-    SpotifyPlaylist = "spotify playlist"
-
-
-class Type_Loop(enum.Enum):
-    """
-    Enum for the loop type.
-    """
-
-    NONE = "none"
-    SONG = "song"
-    QUEUE = "queue"
-
-
-class Enum_Applications(enum.Enum):
-    """
-    Enum for application for together command
-    """
-
-    watch_together = "youtube"
-    poker_night = "poker"
-    chess_in_the_park = "chess"
-    letter_league = "letter-league"
-    word_snack = "word-snack"
-    sketch_heads = "sketch-heads"
-    spellcast = "spellcast"
-    awkword = "awkword"
-    checkers_in_the_park = "checkers"
-    blazing_8s = "blazing-8s"
-    land_io = "land-io"
-    putt_party = "putt-party"
-    bobble_league = "bobble-league"
-    ask_away = "ask-away"
 
 
 class Alternative_Context:
@@ -943,6 +905,9 @@ class Music(commands.Cog):
             )
         )
 
+    @music.command()
+    async def apply_single_filter(self,ctx: commands.Context, filters: Enum_Filters):
+        pass
 
 async def setup(bot):
     await bot.add_cog(Music(bot))
