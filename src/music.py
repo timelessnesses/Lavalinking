@@ -22,7 +22,6 @@ from wavelink.ext import spotify
 from .utils.enums import (Enum_Applications, Enum_Filters, Enum_Source,
                           Type_Loop, actual_class_name_for_class_methods,
                           needed_args)
-
 sys.path.append("..")
 from config import config
 
