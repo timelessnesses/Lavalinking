@@ -1,5 +1,8 @@
 import enum
+
 import wavelink
+
+
 class Enum_Source(enum.Enum):
     YouTube = "youtube"
     SoundCloud = "soundcloud"
@@ -37,7 +40,8 @@ class Enum_Applications(enum.Enum):
     putt_party = "putt-party"
     bobble_league = "bobble-league"
     ask_away = "ask-away"
-    
+
+
 class Enum_Filters(enum.Enum):
     blank = wavelink.filters.Filter
     flat_equalizer = wavelink.filters.Equalizer.flat
@@ -59,33 +63,15 @@ class Enum_Filters(enum.Enum):
     channel_mix_full_right = wavelink.filters.ChannelMix.full_right
     channel_mix_switch = wavelink.filters.ChannelMix.switch
     low_pass = wavelink.filters.LowPass
-    
+
+
 needed_args = {
-    Enum_Filters.karaoke: [
-        "level",
-        "mono level",
-        "filter band",
-        "filter width"
-    ],
-    Enum_Filters.equalizer: [
-        f"{x+1} band" for x in range(15)
-    ],
-    Enum_Filters.timescale: [
-        "speed",
-        "pitch",
-        "rate"
-    ],
-    Enum_Filters.tremolo: [
-        "frequency",
-        "depth"
-    ],
-    Enum_Filters.vibrato: [
-        "frequency",
-        "depth"
-    ],
-    Enum_Filters.rotation: [
-        "speed"
-    ],
+    Enum_Filters.karaoke: ["level", "mono level", "filter band", "filter width"],
+    Enum_Filters.equalizer: [f"{x+1} band" for x in range(15)],
+    Enum_Filters.timescale: ["speed", "pitch", "rate"],
+    Enum_Filters.tremolo: ["frequency", "depth"],
+    Enum_Filters.vibrato: ["frequency", "depth"],
+    Enum_Filters.rotation: ["speed"],
     Enum_Filters.distortion: [
         "sin offset",
         "sin scale",
@@ -94,15 +80,26 @@ needed_args = {
         "tan offset",
         "tan scale",
         "offset",
-        "scale"
+        "scale",
     ],
     Enum_Filters.channel_mix: [
         "left to left",
         "left to right",
         "right to left",
-        "right to right"
+        "right to right",
     ],
-    Enum_Filters.low_pass: [
-        "smoothing"
-    ]
+    Enum_Filters.low_pass: ["smoothing"],
+}
+
+actual_class_name_for_class_methods = {
+    Enum_Filters.flat_equalizer: Enum_Filters.equalizer,
+    Enum_Filters.boost_equalizer: Enum_Filters.equalizer,
+    Enum_Filters.metal_equalizer: Enum_Filters.equalizer,
+    Enum_Filters.piano_equalizer: Enum_Filters.equalizer,
+    Enum_Filters.channel_mix_mono: Enum_Filters.channel_mix,
+    Enum_Filters.channel_mix_only_left: Enum_Filters.channel_mix,
+    Enum_Filters.channel_mix_only_right: Enum_Filters.channel_mix,
+    Enum_Filters.channel_mix_full_left: Enum_Filters.channel_mix,
+    Enum_Filters.channel_mix_full_right: Enum_Filters.channel_mix,
+    Enum_Filters.channel_mix_switch: Enum_Filters.channel_mix,
 }

@@ -1,17 +1,27 @@
 import asyncio
+import inspect
 import sys
 import typing
 from datetime import timedelta
 
 import async_timeout
+import aiohttp
 import discord
 import wavelink
 from discord.ext import commands, tasks
 from discord_together import DiscordTogether
 from dotenv import load_dotenv
+
+try:
+    import orjson as json
+except ImportError:
+    import json
+
 from wavelink.ext import spotify
 
-from .utils.enums import Enum_Source, Type_Loop, Enum_Applications, Enum_Filters
+from .utils.enums import (Enum_Applications, Enum_Filters, Enum_Source,
+                          Type_Loop, actual_class_name_for_class_methods,
+                          needed_args)
 
 sys.path.append("..")
 from config import config
@@ -906,8 +916,171 @@ class Music(commands.Cog):
         )
 
     @music.command()
-    async def apply_single_filter(self,ctx: commands.Context, filters: Enum_Filters):
-        pass
+    async def apply_single_filter(self, ctx: commands.Context, filters: Enum_Filters):
+        kwargs:typing.List[typing.Dict[str, typing.Any]] = [{"filter": filters.name if not inspect.isclass(filters.value) else actual_class_name_for_class_methods.get(filters).value.__name__}]
+        stuffs = [x.value for x in Enum_Filters]
+        filters.value: typing.Union[Enum_Filters, typing.Callable, stuffs]
+        questions = needed_args[filters.value]
+        if filters.value is Enum_Filters.equalizer and not isinstance(
+            filters.value, Enum_Filters.equalizer
+        ):  # check if it is class equalizer and not something subclassed it
+            kwargs.update({"bands": []})
+            for question in questions:
+                await ctx.send(
+                    embed=discord.Embed(
+                        title="Equalizer",
+                        description=f"Please enter the {question} value.",
+                    )
+                )
+                kwargs["bands"].append(
+                    await self.bot.wait_for(
+                        "message",
+                        lambda m: m.author == ctx.author and m.channel == ctx.channel,
+                    )
+                )
+            vc: wavelink.Player = ctx.voice_client
+            await vc.set_filter(filters.value(**kwargs))
+            await ctx.send(
+                embed=discord.Embed(
+                    title="Sucessfully applied filter!",
+                    description="Might take a while to apply the filter.\nDo you want to save current filter? (y/n)",
+                )
+            )
+            if (
+                await self.bot.wait_for(
+                    "message",
+                    lambda m: m.author == ctx.author and m.channel == ctx.channel,
+                ).content.lower()
+                == "y"
+            ):
+                await ctx.send(
+                    embed=discord.Embed(
+                        title="Converted filter to JSON plain text!",
+                        description=f"```json\n{json.dumps(kwargs)}\n```",
+                    )
+                )
+        elif inspect.isclass(filters.value):
+            filter = filters.value()
+            await ctx.send(
+                embed=discord.Embed(
+                    title=filter.name,
+                    description="Applying filter...",
+                )
+            )
+            vc = ctx.voice_client
+            await vc.set_filter(filter)
+            await ctx.send(
+                embed=discord.Embed(
+                    title="Sucessfully applied filter!",
+                    description="Do you want to save current filter? (y/n)",
+                )
+            )
+            if (
+                await self.bot.wait_for(
+                    "message",
+                    lambda m: m.author == ctx.author and m.channel == ctx.channel,
+                ).content.lower()
+                == "y"
+            ):
+                converted: dict = filter.__dict__
+                converted = {
+                    k: v
+                    for k, v in converted.items()
+                    if not k.startswith("_") and not callable(v)
+                }  # remove private attributes and callable attributes
+                await ctx.send(
+                    embed=discord.Embed(
+                        title="Converted filter to JSON plain text!",
+                        description=f"```json\n{json.dumps(converted)}\n```",
+                    )
+                )
+        else:
+            for question in questions:
+                await ctx.send(
+                    embed=discord.Embed(
+                        title=filters.value.name,
+                        description=f"Please enter the {question} value.",
+                    )
+                )
+                kwargs.update(
+                    {
+                        question.replace(" ", "_"): await self.bot.wait_for(
+                            "message",
+                            lambda m: m.author == ctx.author
+                            and m.channel == ctx.channel,
+                        )
+                        for question in questions
+                    }
+                )
+            vc: wavelink.Player = ctx.voice_client
+            await vc.set_filter(filters.value(**kwargs))
+            await ctx.send(
+                embed=discord.Embed(
+                    title="Sucessfully applied filter!",
+                    description="Might take a while to apply the filter.\nDo you want to save current filter? (y/n)",
+                )
+            )
+            if (
+                await self.bot.wait_for(
+                    "message",
+                    lambda m: m.author == ctx.author and m.channel == ctx.channel,
+                ).content.lower()
+                == "y"
+            ):
+                await ctx.send(
+                    embed=discord.Embed(
+                        title="Converted filter to JSON plain text!",
+                        description=f"```json\n{json.dumps(kwargs)}\n```",
+                    )
+                )
+    
+    @music.command()
+    async def apply_multiple_filters(self, ctx: commands.Context, json_string: str):
+        try:
+            filters = json.loads(json_string)
+        except json.JSONDecodeError:
+            try:
+                async with aiohttp.ClientSession() as session: # whoops
+                    async with session.get(json_string) as resp:
+                        filters = json.loads(await resp.text())
+            except json.JSONDecodeError:
+                return await ctx.send(
+                    embed=discord.Embed(
+                        title="Invalid JSON!",
+                        description="Please enter a valid JSON string or a valid URL to a JSON file.",
+                    )
+                )
+            except aiohttp.InvalidURL:
+                return await ctx.send(
+                    embed=discord.Embed(
+                        title="Invalid URL!",
+                        description="Please enter a valid JSON string or a valid URL to a JSON file.",
+                    )
+                )
+            except aiohttp.ClientConnectorError:
+                return await ctx.send(
+                    embed=discord.Embed(
+                        title="HTTP Error!",
+                        description="Please enter a valid JSON string or a valid URL to a JSON file.",
+                    )
+                )
+        applied = []
+        for filter in filters:
+            if inspect.isclass(Enum_Filters(filter)):
+                kwargs = filter["kwargs"]
+                vc: wavelink.Player = ctx.voice_client
+                await vc.set_filter(Enum_Filters(filter)(**kwargs))
+            else:
+                vc: wavelink.Player = ctx.voice_client
+                await vc.set_filter(Enum_Filters(filter)())
+            applied.append(filter.__name__ if not inspect.isclass(filter) else actual_class_name_for_class_methods.get(filter).value.__name__)
+        await ctx.send(
+            embed=discord.Embed(
+                title="Applied multiple filters!",
+                description=f"Applied filters: {', '.join(applied)}",
+            )
+        )
+
 
 async def setup(bot):
     await bot.add_cog(Music(bot))
