@@ -4,8 +4,8 @@ import sys
 import typing
 from datetime import timedelta
 
-import async_timeout
 import aiohttp
+import async_timeout
 import discord
 import wavelink
 from discord.ext import commands, tasks
@@ -20,9 +20,14 @@ except ImportError:
 
 from wavelink.ext import spotify
 
-from .utils.enums import (Enum_Applications, Enum_Filters, Enum_Source,
-                          Type_Loop, actual_class_name_for_class_methods,
-                          needed_args)
+from .utils.enums import (
+    Enum_Applications,
+    Enum_Filters,
+    Enum_Source,
+    Type_Loop,
+    actual_class_name_for_class_methods,
+    needed_args,
+)
 
 sys.path.append("..")
 from config import config
@@ -921,7 +926,13 @@ class Music(commands.Cog):
 
     @music.command()
     async def apply_single_filter(self, ctx: commands.Context, filters: Enum_Filters):
-        kwargs:typing.List[typing.Dict[str, typing.Any]] = [{"filter": filters.name if not inspect.isclass(filters.value) else actual_class_name_for_class_methods.get(filters).value.__name__}]
+        kwargs: typing.List[typing.Dict[str, typing.Any]] = [
+            {
+                "filter": filters.name
+                if not inspect.isclass(filters.value)
+                else actual_class_name_for_class_methods.get(filters).value.__name__
+            }
+        ]
         stuffs = [x.value for x in Enum_Filters]
         filters.value: typing.Union[Enum_Filters, typing.Callable, stuffs]
         questions = needed_args[filters.value]
@@ -1037,14 +1048,14 @@ class Music(commands.Cog):
                         description=f"```json\n{json.dumps(kwargs)}\n```",
                     )
                 )
-    
+
     @music.command()
     async def apply_multiple_filters(self, ctx: commands.Context, json_string: str):
         try:
             filters = json.loads(json_string)
         except json.JSONDecodeError:
             try:
-                async with aiohttp.ClientSession() as session: # whoops
+                async with aiohttp.ClientSession() as session:  # whoops
                     async with session.get(json_string) as resp:
                         filters = json.loads(await resp.text())
             except json.JSONDecodeError:
@@ -1077,7 +1088,11 @@ class Music(commands.Cog):
             else:
                 vc: wavelink.Player = ctx.voice_client
                 await vc.set_filter(Enum_Filters(filter)())
-            applied.append(filter.__name__ if not inspect.isclass(filter) else actual_class_name_for_class_methods.get(filter).value.__name__)
+            applied.append(
+                filter.__name__
+                if not inspect.isclass(filter)
+                else actual_class_name_for_class_methods.get(filter).value.__name__
+            )
         await ctx.send(
             embed=discord.Embed(
                 title="Applied multiple filters!",
