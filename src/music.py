@@ -9,6 +9,7 @@ import aiohttp
 import discord
 import wavelink
 from discord.ext import commands, tasks
+from discord.utils import get
 from discord_together import DiscordTogether
 from dotenv import load_dotenv
 
@@ -222,8 +223,11 @@ class Music(commands.Cog):
         member: discord.Member,
         before: discord.VoiceState,
         after: discord.VoiceState,
-    ):
-        pass
+    ): # wavelink doesn't disconnect automatically not pog champ
+        if member.id == self.bot.user.id:
+            if after.channel is None:
+                vc: wavelink.Player = get(self.bot.voice_clients, guild__id=member.guild.id)
+                await vc.disconnect()
 
     @music.command()
     async def join(

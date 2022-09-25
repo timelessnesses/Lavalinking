@@ -1,0 +1,16 @@
+from _typeshed import Incomplete
+from watchdog.events import FileSystemEventHandler
+
+formatting: Incomplete
+log: Incomplete
+f: Incomplete
+bot: Incomplete
+observer: Incomplete
+
+class FileHandler(FileSystemEventHandler):
+    def on_modified(self, event) -> None: ...
+
+def get_git_revision_short_hash() -> str: ...
+def get_version() -> None: ...
+async def on_ready() -> None: ...
+async def main() -> None: ...
