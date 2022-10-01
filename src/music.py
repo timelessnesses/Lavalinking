@@ -183,15 +183,6 @@ class Music(commands.Cog):
                 )
             )
             return False
-        if not ctx.author.voice:
-            await ctx.send(
-                embed=discord.Embed(
-                    title="Error",
-                    description="You must be in a voice channel to use this command.",
-                    color=discord.Color.red(),
-                )
-            )
-            return False
         if (
             not ctx.voice_client
             and not ctx.invoked_with
@@ -206,13 +197,8 @@ class Music(commands.Cog):
                 if str(command) not in ["play", "join"]
             ]
         ):
-            await ctx.send(
-                embed=discord.Embed(
-                    title="Error",
-                    description="I am not in a voice channel.",
-                    color=discord.Color.red(),
-                )
-            )
+            await ctx.author.voice.channel.connect(cls=wavelink.Player)
+            await ctx.invoke(ctx.command)
             return False
         return True
 
@@ -243,6 +229,14 @@ class Music(commands.Cog):
         """
         if not channel:
             channel = ctx.author.voice.channel
+        if not channel:
+            return await ctx.send(
+                embed=discord.Embed(
+                    title="No channel to join",
+                    description="You need to be in a voice channel or specify one.",
+                    color=discord.Color.red(),
+                )
+            )
         await ctx.send(
             embed=discord.Embed(
                 title="Joining",
@@ -271,14 +265,22 @@ class Music(commands.Cog):
                 color=discord.Color.yellow(),
             )
         )
-        await ctx.voice_client.disconnect()
-        await ctx.send(
-            embed=discord.Embed(
-                title="Left",
-                description="Left {}".format(ctx.guild.me.voice.channel.mention),
-                color=discord.Color.green(),
+        try:
+            await ctx.voice_client.disconnect()
+            await ctx.send(
+                embed=discord.Embed(
+                    title="Left",
+                    description="Left {}".format(ctx.guild.me.voice.channel.mention),
+                    color=discord.Color.green(),
+                )
             )
-        )
+        except:
+            return await ctx.send(
+                embed=discord.Embed(
+                    title="Failed to disconnect",
+                    color=discord.Color.red()
+                )
+            )
 
     @music.command()
     async def play(
@@ -340,13 +342,17 @@ class Music(commands.Cog):
                     )
                 )[0]
             elif "spotify.com" in query and (
-                not "playlist" in query or not "album" in query
+                "playlist" in query or "album" in query
             ):
-                track = await spotify.SpotifyTrack.search(query, return_first=True)
+                track = await wavelink.NodePool.get_node().get_tracks(
+                    query=query, cls=spotify.SpotifyTrack
+                )
             elif "spotify.com" in query and (
                 not "playlist" in query or not "album" in query
             ):
-                track = await spotify.SpotifyTrack.search(query)
+                track = await wavelink.NodePool.get_node().get_tracks(
+                    query=query, cls=spotify.SpotifyTrack
+                )[0]
             elif "youtube.com" in query and "list" in query:
                 track = await wavelink.NodePool.get_node().get_tracks(
                     query, cls=wavelink.YouTubePlaylist
@@ -372,14 +378,7 @@ class Music(commands.Cog):
                     track = await spotify.SpotifyTrack.search(query)
                 elif source == Enum_Source.YouTubePlaylist:
                     track = await wavelink.YouTubeTrack.search(query)
-        except wavelink.errors.LoadTrackError:
-            return await ctx.send(
-                embed=discord.Embed(
-                    title="Error",
-                    description="Could not load track.",
-                    color=discord.Color.red(),
-                )
-            )
+        
         except wavelink.errors.LavalinkException as e:
             return await ctx.send(
                 embed=discord.Embed(
@@ -929,17 +928,15 @@ class Music(commands.Cog):
         kwargs: typing.List[typing.Dict[str, typing.Any]] = [
             {
                 "filter": filters.name
-                if not inspect.isclass(filters.value)
-                else actual_class_name_for_class_methods.get(filters).value.__name__
             }
         ]
         stuffs = [x.value for x in Enum_Filters]
         filters.value: typing.Union[Enum_Filters, typing.Callable, stuffs]
-        questions = needed_args[filters.value]
+        questions = needed_args[filters]
         if filters.value is Enum_Filters.equalizer and not isinstance(
             filters.value, Enum_Filters.equalizer
         ):  # check if it is class equalizer and not something subclassed it
-            kwargs.update({"bands": []})
+            kwargs[0].update({"bands": []})
             for question in questions:
                 await ctx.send(
                     embed=discord.Embed(
@@ -950,7 +947,7 @@ class Music(commands.Cog):
                 kwargs["bands"].append(
                     await self.bot.wait_for(
                         "message",
-                        lambda m: m.author == ctx.author and m.channel == ctx.channel,
+                        check=lambda m: m.author == ctx.author and m.channel == ctx.channel,
                     )
                 )
             vc: wavelink.Player = ctx.voice_client
@@ -974,8 +971,7 @@ class Music(commands.Cog):
                         description=f"```json\n{json.dumps(kwargs)}\n```",
                     )
                 )
-        elif inspect.isclass(filters.value):
-            filter = filters.value()
+        elif not inspect.isclass(filters.value):
             await ctx.send(
                 embed=discord.Embed(
                     title=filter.name,
@@ -983,7 +979,7 @@ class Music(commands.Cog):
                 )
             )
             vc = ctx.voice_client
-            await vc.set_filter(filter)
+            await vc.set_filter(filters.value())
             await ctx.send(
                 embed=discord.Embed(
                     title="Sucessfully applied filter!",
@@ -1013,11 +1009,11 @@ class Music(commands.Cog):
             for question in questions:
                 await ctx.send(
                     embed=discord.Embed(
-                        title=filters.value.name,
+                        title=filters.value().name,
                         description=f"Please enter the {question} value.",
                     )
                 )
-                kwargs.update(
+                kwargs[0].update(
                     {
                         question.replace(" ", "_"): await self.bot.wait_for(
                             "message",
@@ -1084,10 +1080,10 @@ class Music(commands.Cog):
             if inspect.isclass(Enum_Filters(filter)):
                 kwargs = filter["kwargs"]
                 vc: wavelink.Player = ctx.voice_client
-                await vc.set_filter(Enum_Filters(filter)(**kwargs))
+                await vc.set_filter(Enum_Filters(filter).value(**kwargs))
             else:
                 vc: wavelink.Player = ctx.voice_client
-                await vc.set_filter(Enum_Filters(filter)())
+                await vc.set_filter(Enum_Filters(filter).value())
             applied.append(
                 filter.__name__
                 if not inspect.isclass(filter)

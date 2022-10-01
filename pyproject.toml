@@ -31,9 +31,6 @@ pylint = "^2.14.3"
 mypy = "^0.961"
 guppy3 = "^3.1.2"
 
-[tool.poetry.group.dev.dependencies]
-mypy = "^0.971"
-
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

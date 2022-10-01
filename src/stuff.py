@@ -50,14 +50,14 @@ class Stuff(
         await asyncio.sleep(2)
         self.owners = config.owners_id + list(self.bot.owner_ids)
         self.owners.append(self.bot.owner_id)
-        self.owners = {int(id) for id in self.owners}
+        self.owners = {int(id) for id in self.owners if not id is None}
 
     @property
-    def display_emoji(self):
+    def display_emoji(self) -> str:
         return "💭"
 
     @commands.hybrid_command(name="credits", aliases=["c"])
-    async def credits(self, ctx):
+    async def credits(self, ctx) -> str:
         """
         Shows the credits.
         """
@@ -86,7 +86,7 @@ class Stuff(
         await ctx.send(embed=embed)
 
     @commands.hybrid_command(name="status")
-    async def status(self, ctx):
+    async def status(self, ctx) -> None:
         """
         Status of bot like uptime, memory usage, etc.
         """
@@ -106,7 +106,7 @@ class Stuff(
         await ctx.send(embed=embed)
 
     @commands.hybrid_command(name="node_stats")
-    async def node_stats(self, ctx):
+    async def node_stats(self, ctx) -> None:
         """
         Shows the lavalink stats.
         """
@@ -146,5 +146,5 @@ class Stuff(
         await ctx.send(embed=embed)
 
 
-async def setup(bot):
+async def setup(bot) -> None:
     await bot.add_cog(Stuff(bot))
