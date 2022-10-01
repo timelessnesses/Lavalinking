@@ -279,8 +279,7 @@ class Music(commands.Cog):
         except:
             return await ctx.send(
                 embed=discord.Embed(
-                    title="Failed to disconnect",
-                    color=discord.Color.red()
+                    title="Failed to disconnect", color=discord.Color.red()
                 )
             )
 
@@ -343,9 +342,7 @@ class Music(commands.Cog):
                         wavelink.YouTubeTrack, query
                     )
                 )[0]
-            elif "spotify.com" in query and (
-                "playlist" in query or "album" in query
-            ):
+            elif "spotify.com" in query and ("playlist" in query or "album" in query):
                 track = await wavelink.NodePool.get_node().get_tracks(
                     query=query, cls=spotify.SpotifyTrack
                 )
@@ -380,7 +377,7 @@ class Music(commands.Cog):
                     track = await spotify.SpotifyTrack.search(query)
                 elif source == Enum_Source.YouTubePlaylist:
                     track = await wavelink.YouTubeTrack.search(query)
-        
+
         except wavelink.errors.LavalinkException as e:
             return await ctx.send(
                 embed=discord.Embed(
@@ -927,11 +924,7 @@ class Music(commands.Cog):
 
     @music.command()
     async def apply_single_filter(self, ctx: commands.Context, filters: Enum_Filters):
-        kwargs: typing.List[typing.Dict[str, typing.Any]] = [
-            {
-                "filter": filters.name
-            }
-        ]
+        kwargs: typing.List[typing.Dict[str, typing.Any]] = [{"filter": filters.name}]
         stuffs = [x.value for x in Enum_Filters]
         filters.value: typing.Union[Enum_Filters, typing.Callable, stuffs]
         questions = needed_args[filters]
@@ -949,7 +942,8 @@ class Music(commands.Cog):
                 kwargs["bands"].append(
                     await self.bot.wait_for(
                         "message",
-                        check=lambda m: m.author == ctx.author and m.channel == ctx.channel,
+                        check=lambda m: m.author == ctx.author
+                        and m.channel == ctx.channel,
                     )
                 )
             vc: wavelink.Player = ctx.voice_client
