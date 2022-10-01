@@ -214,10 +214,12 @@ class Music(commands.Cog):
         member: discord.Member,
         before: discord.VoiceState,
         after: discord.VoiceState,
-    ): # wavelink doesn't disconnect automatically not pog champ
+    ):  # wavelink doesn't disconnect automatically not pog champ
         if member.id == self.bot.user.id:
             if after.channel is None:
-                vc: wavelink.Player = get(self.bot.voice_clients, guild__id=member.guild.id)
+                vc: wavelink.Player = get(
+                    self.bot.voice_clients, guild__id=member.guild.id
+                )
                 await vc.disconnect()
 
     @music.command()
