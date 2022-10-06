@@ -188,16 +188,25 @@ class Music(commands.Cog):
             return False
         if (
             not ctx.voice_client
-            and not ctx.invoked_with
+            or not ctx.invoked_with
             in [
                 "play",
                 "join",
             ]
         ):
+            if not ctx.author.voice:
+                await ctx.send(
+                    embed=discord.Embed(
+                        title="Error",
+                        description="This command needs you to join voice",
+                        color=discord.Color.red()
+                    )
+                )
+                return False
             await ctx.author.voice.channel.connect(cls=wavelink.Player)
             await ctx.invoke(ctx.command)
-            return False
-        return True
+            return True
+        return False
 
     @commands.hybrid_group()
     async def music(self, ctx: commands.Context):
@@ -292,7 +301,7 @@ class Music(commands.Cog):
         """
         Play a song
         """
-        if ctx.author.voice.channel and not ctx.voice_client:
+        if ctx.author.voice and not ctx.voice_client:
             vc: wavelink.Player = await ctx.author.voice.channel.connect(
                 cls=wavelink.Player
             )
