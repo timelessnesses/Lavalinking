@@ -295,7 +295,7 @@ class Music(commands.Cog):
         ctx: commands.Context,
         source: Enum_Source = Enum_Source.YouTube,
         *,
-        query: str = None,
+        query: str,
     ):
 
         """
