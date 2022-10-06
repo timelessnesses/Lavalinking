@@ -13,7 +13,6 @@ from discord.utils import get
 from discord_together import DiscordTogether
 from dotenv import load_dotenv
 
-
 try:
     import orjson as json
 except ImportError:
@@ -58,7 +57,7 @@ class Music(commands.Cog):
         self.now_playing2: typing.Dict[int, wavelink.Track] = {}
 
     async def connect(self):
-        print('connected')
+        print("connected")
         await self.bot.wait_until_ready()
         client: wavelink.ext.spotify.SpotifyClient = None
         if config.spotify_client_id and config.spotify_client_secret:
@@ -73,7 +72,7 @@ class Music(commands.Cog):
             password=config.lavalink_password,
             spotify_client=client,
         )
-        print('connected for real')
+        print("connected for real")
         self.client = client
         self.together = await DiscordTogether(config.token)
 
@@ -186,20 +185,16 @@ class Music(commands.Cog):
                 )
             )
             return False
-        if (
-            not ctx.voice_client
-            or not ctx.invoked_with
-            in [
-                "play",
-                "join",
-            ]
-        ):
+        if not ctx.voice_client or not ctx.invoked_with in [
+            "play",
+            "join",
+        ]:
             if not ctx.author.voice:
                 await ctx.send(
                     embed=discord.Embed(
                         title="Error",
                         description="This command needs you to join voice",
-                        color=discord.Color.red()
+                        color=discord.Color.red(),
                     )
                 )
                 return False
