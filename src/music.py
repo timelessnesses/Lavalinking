@@ -310,7 +310,7 @@ class Music(commands.Cog):
         vc.loop = Type_Loop.NONE
         await vc.set_volume(0.5)
         print(source)
-        print('o')
+        print("o")
         try:
             track = None
             if ctx.message.attachments:
@@ -349,9 +349,11 @@ class Music(commands.Cog):
             elif "spotify.com" in query and (
                 not "playlist" in query or not "album" in query
             ):
-                track = (await wavelink.NodePool.get_node().get_tracks(
-                    query=query, cls=spotify.SpotifyTrack
-                ))[0]
+                track = (
+                    await wavelink.NodePool.get_node().get_tracks(
+                        query=query, cls=spotify.SpotifyTrack
+                    )
+                )[0]
             elif "youtube.com" in query and "list" in query:
                 track = await wavelink.NodePool.get_node().get_tracks(
                     query, cls=wavelink.YouTubePlaylist
