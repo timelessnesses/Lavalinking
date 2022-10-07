@@ -1,10 +1,8 @@
 import asyncio
-import inspect
 import sys
 import typing
 from datetime import timedelta
 
-import aiohttp
 import async_timeout
 import discord
 import wavelink
@@ -14,19 +12,16 @@ from discord_together import DiscordTogether
 from dotenv import load_dotenv
 
 try:
-    import orjson as json
+    pass
 except ImportError:
-    import json
+    pass
 
 from wavelink.ext import spotify
 
 from .utils.enums import (
     Enum_Applications,
-    Enum_Filters,
     Enum_Source,
     Type_Loop,
-    actual_class_name_for_class_methods,
-    needed_args,
 )
 
 sys.path.append("..")
@@ -191,7 +186,7 @@ class Music(commands.Cog):
                     embed=discord.Embed(
                         title="Error",
                         description="This command needs you to join voice chat",
-                        color=discord.Color.red()
+                        color=discord.Color.red(),
                     )
                 )
                 return False
@@ -955,6 +950,7 @@ class Music(commands.Cog):
                 )
             )
         await vc.play(vc.queue[0]) if not vc.is_playing() else None
+
     @music.command()
     async def queue(self, ctx: commands.Context):
         if not ctx.author.voice.channel:
@@ -1086,8 +1082,6 @@ class Music(commands.Cog):
                 description=f"Click link below to started!\n{await self.together.create_link(ctx.author.voice.channel.id,application.value)}",
             )
         )
-
-    
 
 
 async def setup(bot):
