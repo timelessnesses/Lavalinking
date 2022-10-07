@@ -198,7 +198,7 @@ class Music(commands.Cog):
                 await ctx.send(
                     embed=discord.Embed(
                         title="Error",
-                        description="This command needs you to join voice",
+                        description="This command needs you to join voice chat",
                         color=discord.Color.red()
                     )
                 )
@@ -797,6 +797,172 @@ class Music(commands.Cog):
         await ctx.send(embed=await self.info(vc.track, ctx, vc))
 
     @music.command()
+    async def add(self,ctx: commands.Context, query:str, source: Enum_Source):
+        """
+        Add music to a queue (incase of wavelink being bad)
+        """
+        if ctx.author.voice and not ctx.voice_client:
+            vc: wavelink.Player = await ctx.author.voice.channel.connect(
+                cls=wavelink.Player
+            )
+        else:
+            if ctx.voice_client:
+                vc: wavelink.Player = ctx.voice_client
+            else:
+                return await ctx.send(
+                    embed=discord.Embed(
+                        title="Error",
+                        description="You must be in a voice channel to use this command.",
+                        color=discord.Color.red(),
+                    )
+                )
+        vc.loop = Type_Loop.NONE
+        try:
+            track = None
+            if ctx.message.attachments:
+                track = []
+                count = 1
+                for attachment in ctx.message.attachments:
+                    if (
+                        not "audio" in attachment.content_type.split("/")[0]
+                        or not "video" in attachment.content_type.split("/")[0]
+                    ):
+                        await ctx.send(
+                            embed=discord.Embed(
+                                title="Error",
+                                description=f"Attachment number {count} has wrong content type.\nSkipping",
+                            )
+                        )
+                        continue
+                    count += 1
+                    track.append(
+                        (
+                            await wavelink.NodePool.get_node().get_tracks(
+                                wavelink.Track, attachment.url
+                            )[0]
+                        )
+                    )
+            elif "youtube.com" in query and "watch" in query:  # youtube link
+                track = (
+                    await wavelink.NodePool.get_node().get_tracks(
+                        wavelink.YouTubeTrack, query
+                    )
+                )[0]
+            elif "spotify.com" in query and ("playlist" in query or "album" in query):
+                track = await wavelink.NodePool.get_node().get_tracks(
+                    query=query, cls=spotify.SpotifyTrack
+                )
+            elif "spotify.com" in query and (
+                not "playlist" in query or not "album" in query
+            ):
+                track = await wavelink.NodePool.get_node().get_tracks(
+                    query=query, cls=spotify.SpotifyTrack
+                )[0]
+            elif "youtube.com" in query and "list" in query:
+                track = await wavelink.NodePool.get_node().get_tracks(
+                    query, cls=wavelink.YouTubePlaylist
+                )
+            elif "soundcloud.com" in query and not "sets" in query:
+                track = (
+                    await wavelink.NodePool.get_node().get_tracks(
+                        query=query, cls=wavelink.SoundCloudTrack
+                    )
+                )[0]
+            elif "soundcloud.com" in query and "sets" in query:
+                track = await wavelink.NodePool.get_node().get_tracks(
+                    query=query, cls=wavelink.SoundCloudTrack
+                )
+            else:
+                if source == Enum_Source.YouTube:
+                    track = await wavelink.YouTubeTrack.search(query, return_first=True)
+                elif source == Enum_Source.SoundCloud:
+                    track = (await wavelink.SoundCloudTrack.search(query))[0]
+                elif source == Enum_Source.Spotify:
+                    track = await spotify.SpotifyTrack.search(query, return_first=True)
+                elif source == Enum_Source.SpotifyPlaylist:
+                    track = await spotify.SpotifyTrack.search(query)
+                elif source == Enum_Source.YouTubePlaylist:
+                    track = await wavelink.YouTubeTrack.search(query)
+
+        except wavelink.errors.LavalinkException as e:
+            return await ctx.send(
+                embed=discord.Embed(
+                    title="Error",
+                    description=f"Lavalink server error.\n```py\nLavalinkException: {str(e)}\n```",
+                    color=discord.Color.red(),
+                )
+            )
+        if not track:
+            return await ctx.send(
+                embed=discord.Embed(
+                    title="Error",
+                    description="Could not find a track with that name. ",
+                    color=discord.Color.red(),
+                )
+            )
+        if isinstance(track, (tuple, list)):
+            for track_ in track:
+                try:
+                    self.bindings[ctx.guild.id].append(
+                        {
+                            "track": track_,
+                            "vc": vc,
+                            "requester": ctx.author,
+                            "channel": await ctx.guild.fetch_channel(ctx.channel.id),
+                        }
+                    )
+                except (KeyError, AttributeError):
+                    self.bindings[ctx.guild.id] = [
+                        {
+                            "track": track,
+                            "vc": ctx.voice_client,
+                            "requester": ctx.author,
+                            "channel": await ctx.guild.fetch_channel(ctx.channel.id),
+                        }
+                    ]
+                await ctx.send(
+                    embed=(
+                        discord.Embed(
+                            title=f"Added {track_.title} to the queue",
+                            color=discord.Color.green(),
+                        )
+                    ),
+                    delete_after=2,
+                )
+
+                await vc.play(
+                    track[0]
+                ) if len(vc.queue) == 0 else await vc.queue.put_wait(track_)
+        else:
+            try:
+                self.bindings[ctx.guild.id].append(
+                    {
+                        "track": track,
+                        "vc": vc,
+                        "requester": ctx.author,
+                        "channel": await ctx.guild.fetch_channel(ctx.channel.id),
+                    }
+                )
+            except (KeyError, AttributeError):
+                self.bindings[ctx.guild.id] = [
+                    {
+                        "track": track,
+                        "vc": ctx.voice_client,
+                        "requester": ctx.author,
+                        "channel": await ctx.guild.fetch_channel(ctx.channel.id),
+                    }
+                ]
+
+            await vc.play(
+                    track
+                ) if len(vc.queue) == 0 else await vc.queue.put_wait(track)
+            await ctx.send(
+                embed=discord.Embed(
+                    title=f"Added {track.title} to the queue",
+                    color=discord.Color.green(),
+                )
+            )
+    @music.command()
     async def queue(self, ctx: commands.Context):
         if not ctx.author.voice.channel:
             return await ctx.send(
@@ -928,175 +1094,7 @@ class Music(commands.Cog):
             )
         )
 
-    @music.command()
-    async def apply_single_filter(self, ctx: commands.Context, filters: Enum_Filters):
-        kwargs: typing.List[typing.Dict[str, typing.Any]] = [{"filter": filters.name}]
-        stuffs = [x.value for x in Enum_Filters]
-        filters.value: typing.Union[Enum_Filters, typing.Callable, stuffs]
-        questions = needed_args[filters]
-        if filters.value is Enum_Filters.equalizer and not isinstance(
-            filters.value, Enum_Filters.equalizer
-        ):  # check if it is class equalizer and not something subclassed it
-            kwargs[0].update({"bands": []})
-            for question in questions:
-                await ctx.send(
-                    embed=discord.Embed(
-                        title="Equalizer",
-                        description=f"Please enter the {question} value.",
-                    )
-                )
-                kwargs["bands"].append(
-                    await self.bot.wait_for(
-                        "message",
-                        check=lambda m: m.author == ctx.author
-                        and m.channel == ctx.channel,
-                    )
-                )
-            vc: wavelink.Player = ctx.voice_client
-            await vc.set_filter(filters.value(**kwargs))
-            await ctx.send(
-                embed=discord.Embed(
-                    title="Sucessfully applied filter!",
-                    description="Might take a while to apply the filter.\nDo you want to save current filter? (y/n)",
-                )
-            )
-            if (
-                await self.bot.wait_for(
-                    "message",
-                    lambda m: m.author == ctx.author and m.channel == ctx.channel,
-                ).content.lower()
-                == "y"
-            ):
-                await ctx.send(
-                    embed=discord.Embed(
-                        title="Converted filter to JSON plain text!",
-                        description=f"```json\n{json.dumps(kwargs)}\n```",
-                    )
-                )
-        elif not inspect.isclass(filters.value):
-            await ctx.send(
-                embed=discord.Embed(
-                    title=filter.name,
-                    description="Applying filter...",
-                )
-            )
-            vc = ctx.voice_client
-            await vc.set_filter(filters.value())
-            await ctx.send(
-                embed=discord.Embed(
-                    title="Sucessfully applied filter!",
-                    description="Do you want to save current filter? (y/n)",
-                )
-            )
-            if (
-                await self.bot.wait_for(
-                    "message",
-                    lambda m: m.author == ctx.author and m.channel == ctx.channel,
-                ).content.lower()
-                == "y"
-            ):
-                converted: dict = filter.__dict__
-                converted = {
-                    k: v
-                    for k, v in converted.items()
-                    if not k.startswith("_") and not callable(v)
-                }  # remove private attributes and callable attributes
-                await ctx.send(
-                    embed=discord.Embed(
-                        title="Converted filter to JSON plain text!",
-                        description=f"```json\n{json.dumps(converted)}\n```",
-                    )
-                )
-        else:
-            for question in questions:
-                await ctx.send(
-                    embed=discord.Embed(
-                        title=filters.value().name,
-                        description=f"Please enter the {question} value.",
-                    )
-                )
-                kwargs[0].update(
-                    {
-                        question.replace(" ", "_"): await self.bot.wait_for(
-                            "message",
-                            lambda m: m.author == ctx.author
-                            and m.channel == ctx.channel,
-                        )
-                        for question in questions
-                    }
-                )
-            vc: wavelink.Player = ctx.voice_client
-            await vc.set_filter(filters.value(**kwargs))
-            await ctx.send(
-                embed=discord.Embed(
-                    title="Sucessfully applied filter!",
-                    description="Might take a while to apply the filter.\nDo you want to save current filter? (y/n)",
-                )
-            )
-            if (
-                await self.bot.wait_for(
-                    "message",
-                    lambda m: m.author == ctx.author and m.channel == ctx.channel,
-                ).content.lower()
-                == "y"
-            ):
-                await ctx.send(
-                    embed=discord.Embed(
-                        title="Converted filter to JSON plain text!",
-                        description=f"```json\n{json.dumps(kwargs)}\n```",
-                    )
-                )
-
-    @music.command()
-    async def apply_multiple_filters(self, ctx: commands.Context, json_string: str):
-        try:
-            filters = json.loads(json_string)
-        except json.JSONDecodeError:
-            try:
-                async with aiohttp.ClientSession() as session:  # whoops
-                    async with session.get(json_string) as resp:
-                        filters = json.loads(await resp.text())
-            except json.JSONDecodeError:
-                return await ctx.send(
-                    embed=discord.Embed(
-                        title="Invalid JSON!",
-                        description="Please enter a valid JSON string or a valid URL to a JSON file.",
-                    )
-                )
-            except aiohttp.InvalidURL:
-                return await ctx.send(
-                    embed=discord.Embed(
-                        title="Invalid URL!",
-                        description="Please enter a valid JSON string or a valid URL to a JSON file.",
-                    )
-                )
-            except aiohttp.ClientConnectorError:
-                return await ctx.send(
-                    embed=discord.Embed(
-                        title="HTTP Error!",
-                        description="Please enter a valid JSON string or a valid URL to a JSON file.",
-                    )
-                )
-        applied = []
-        for filter in filters:
-            if inspect.isclass(Enum_Filters(filter)):
-                kwargs = filter["kwargs"]
-                vc: wavelink.Player = ctx.voice_client
-                await vc.set_filter(Enum_Filters(filter).value(**kwargs))
-            else:
-                vc: wavelink.Player = ctx.voice_client
-                await vc.set_filter(Enum_Filters(filter).value())
-            applied.append(
-                filter.__name__
-                if not inspect.isclass(filter)
-                else actual_class_name_for_class_methods.get(filter).value.__name__
-            )
-        await ctx.send(
-            embed=discord.Embed(
-                title="Applied multiple filters!",
-                description=f"Applied filters: {', '.join(applied)}",
-            )
-        )
+    
 
 
 async def setup(bot):
