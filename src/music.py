@@ -793,7 +793,7 @@ class Music(commands.Cog):
         await ctx.send(embed=await self.info(vc.track, ctx, vc))
 
     @music.command()
-    async def add(self,ctx: commands.Context, query:str, source: Enum_Source):
+    async def add(self,ctx: commands.Context, query:str, source: Enum_Source=Enum_Source.YouTube):
         """
         Add music to a queue (incase of wavelink being bad)
         """
