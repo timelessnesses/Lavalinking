@@ -185,23 +185,19 @@ class Music(commands.Cog):
                 )
             )
             return False
-        if not ctx.voice_client or not ctx.invoked_with in [
-            "play",
-            "join",
-        ]:
+        if not ctx.voice_client:
             if not ctx.author.voice:
                 await ctx.send(
                     embed=discord.Embed(
                         title="Error",
-                        description="This command needs you to join voice",
+                        description="This command needs you to join voice chat",
                         color=discord.Color.red(),
                     )
                 )
                 return False
             await ctx.author.voice.channel.connect(cls=wavelink.Player)
-            await ctx.invoke(ctx.command)
             return True
-        return False
+        return True
 
     @commands.hybrid_group()
     async def music(self, ctx: commands.Context):
@@ -288,14 +284,14 @@ class Music(commands.Cog):
     async def play(
         self,
         ctx: commands.Context,
-        source: Enum_Source = Enum_Source.YouTube,
-        *,
         query: str,
+        source: Enum_Source = Enum_Source.YouTube,
     ):
 
         """
         Play a song
         """
+
         if ctx.author.voice and not ctx.voice_client:
             vc: wavelink.Player = await ctx.author.voice.channel.connect(
                 cls=wavelink.Player
@@ -312,6 +308,9 @@ class Music(commands.Cog):
                     )
                 )
         vc.loop = Type_Loop.NONE
+        await vc.set_volume(0.5)
+        print(source)
+        print('o')
         try:
             track = None
             if ctx.message.attachments:
@@ -350,9 +349,9 @@ class Music(commands.Cog):
             elif "spotify.com" in query and (
                 not "playlist" in query or not "album" in query
             ):
-                track = await wavelink.NodePool.get_node().get_tracks(
+                track = (await wavelink.NodePool.get_node().get_tracks(
                     query=query, cls=spotify.SpotifyTrack
-                )[0]
+                ))[0]
             elif "youtube.com" in query and "list" in query:
                 track = await wavelink.NodePool.get_node().get_tracks(
                     query, cls=wavelink.YouTubePlaylist
