@@ -18,11 +18,7 @@ except ImportError:
 
 from wavelink.ext import spotify
 
-from .utils.enums import (
-    Enum_Applications,
-    Enum_Source,
-    Type_Loop,
-)
+from .utils.enums import Enum_Applications, Enum_Source, Type_Loop
 
 sys.path.append("..")
 from config import config
@@ -788,7 +784,12 @@ class Music(commands.Cog):
         await ctx.send(embed=await self.info(vc.track, ctx, vc))
 
     @music.command()
-    async def add(self,ctx: commands.Context, query:str, source: Enum_Source=Enum_Source.YouTube):
+    async def add(
+        self,
+        ctx: commands.Context,
+        query: str,
+        source: Enum_Source = Enum_Source.YouTube,
+    ):
         """
         Add music to a queue (incase of wavelink being bad)
         """
