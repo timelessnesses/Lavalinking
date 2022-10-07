@@ -13,7 +13,6 @@ from discord.utils import get
 from discord_together import DiscordTogether
 from dotenv import load_dotenv
 
-
 try:
     import orjson as json
 except ImportError:
@@ -58,7 +57,7 @@ class Music(commands.Cog):
         self.now_playing2: typing.Dict[int, wavelink.Track] = {}
 
     async def connect(self):
-        print('connected')
+        print("connected")
         await self.bot.wait_until_ready()
         client: wavelink.ext.spotify.SpotifyClient = None
         if config.spotify_client_id and config.spotify_client_secret:
@@ -73,7 +72,7 @@ class Music(commands.Cog):
             password=config.lavalink_password,
             spotify_client=client,
         )
-        print('connected for real')
+        print("connected for real")
         self.client = client
         self.together = await DiscordTogether(config.token)
 
@@ -186,14 +185,7 @@ class Music(commands.Cog):
                 )
             )
             return False
-        if (
-            not ctx.voice_client
-            or not ctx.invoked_with
-            in [
-                "play",
-                "join",
-            ]
-        ):
+        if not ctx.voice_client:
             if not ctx.author.voice:
                 await ctx.send(
                     embed=discord.Embed(
@@ -204,9 +196,8 @@ class Music(commands.Cog):
                 )
                 return False
             await ctx.author.voice.channel.connect(cls=wavelink.Player)
-            await ctx.invoke(ctx.command)
             return True
-        return False
+        return True
 
     @commands.hybrid_group()
     async def music(self, ctx: commands.Context):
@@ -293,14 +284,14 @@ class Music(commands.Cog):
     async def play(
         self,
         ctx: commands.Context,
+        query: str,
         source: Enum_Source = Enum_Source.YouTube,
-        *,
-        query: str = None,
     ):
 
         """
         Play a song
         """
+
         if ctx.author.voice and not ctx.voice_client:
             vc: wavelink.Player = await ctx.author.voice.channel.connect(
                 cls=wavelink.Player
@@ -317,6 +308,9 @@ class Music(commands.Cog):
                     )
                 )
         vc.loop = Type_Loop.NONE
+        await vc.set_volume(0.5)
+        print(source)
+        print("o")
         try:
             track = None
             if ctx.message.attachments:
@@ -355,8 +349,10 @@ class Music(commands.Cog):
             elif "spotify.com" in query and (
                 not "playlist" in query or not "album" in query
             ):
-                track = await wavelink.NodePool.get_node().get_tracks(
-                    query=query, cls=spotify.SpotifyTrack
+                track = (
+                    await wavelink.NodePool.get_node().get_tracks(
+                        query=query, cls=spotify.SpotifyTrack
+                    )
                 )[0]
             elif "youtube.com" in query and "list" in query:
                 track = await wavelink.NodePool.get_node().get_tracks(
@@ -930,9 +926,7 @@ class Music(commands.Cog):
                     delete_after=2,
                 )
 
-                await vc.play(
-                    track[0]
-                ) if len(vc.queue) == 0 else await vc.queue.put_wait(track_)
+                await vc.queue.put_wait(track_)
         else:
             try:
                 self.bindings[ctx.guild.id].append(
@@ -953,15 +947,14 @@ class Music(commands.Cog):
                     }
                 ]
 
-            await vc.play(
-                    track
-                ) if len(vc.queue) == 0 else await vc.queue.put_wait(track)
+            await vc.queue.put_wait(track)
             await ctx.send(
                 embed=discord.Embed(
                     title=f"Added {track.title} to the queue",
                     color=discord.Color.green(),
                 )
             )
+        await vc.play(vc.queue[0]) if not vc.is_playing() else None
     @music.command()
     async def queue(self, ctx: commands.Context):
         if not ctx.author.voice.channel:
