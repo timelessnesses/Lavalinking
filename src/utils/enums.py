@@ -90,3 +90,16 @@ needed_args = {
     ],
     Enum_Filters.low_pass: ["smoothing"],
 }
+
+actual_class_name_for_class_methods = {
+    Enum_Filters.flat_equalizer: Enum_Filters.equalizer,
+    Enum_Filters.boost_equalizer: Enum_Filters.equalizer,
+    Enum_Filters.metal_equalizer: Enum_Filters.equalizer,
+    Enum_Filters.piano_equalizer: Enum_Filters.equalizer,
+    Enum_Filters.channel_mix_mono: Enum_Filters.channel_mix,
+    Enum_Filters.channel_mix_only_left: Enum_Filters.channel_mix,
+    Enum_Filters.channel_mix_only_right: Enum_Filters.channel_mix,
+    Enum_Filters.channel_mix_full_left: Enum_Filters.channel_mix,
+    Enum_Filters.channel_mix_full_right: Enum_Filters.channel_mix,
+    Enum_Filters.channel_mix_switch: Enum_Filters.channel_mix,
+}

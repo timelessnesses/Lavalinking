@@ -7,11 +7,18 @@ import async_timeout
 import discord
 import wavelink
 from discord.ext import commands, tasks
+from discord.utils import get
 from discord_together import DiscordTogether
 from dotenv import load_dotenv
+
+try:
+    pass
+except ImportError:
+    pass
+
 from wavelink.ext import spotify
 
-from .utils.enums import Enum_Applications, Enum_Filters, Enum_Source, Type_Loop
+from .utils.enums import Enum_Applications, Enum_Source, Type_Loop
 
 sys.path.append("..")
 from config import config
@@ -20,14 +27,14 @@ load_dotenv()
 
 
 class Alternative_Context:
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         for key, value in kwargs.items():
             setattr(self, key, value)
 
     def __getattr__(self, name):
         return self.__dict__.get(name)
 
-    def __setattr__(self, name, value):
+    def __setattr__(self, name, value) -> None:
         self.__dict__[name] = value
 
 
@@ -167,37 +174,18 @@ class Music(commands.Cog):
                 )
             )
             return False
-        if not ctx.author.voice:
-            await ctx.send(
-                embed=discord.Embed(
-                    title="Error",
-                    description="You must be in a voice channel to use this command.",
-                    color=discord.Color.red(),
+        if not ctx.voice_client:
+            if not ctx.author.voice:
+                await ctx.send(
+                    embed=discord.Embed(
+                        title="Error",
+                        description="This command needs you to join voice chat",
+                        color=discord.Color.red(),
+                    )
                 )
-            )
-            return False
-        if (
-            not ctx.voice_client
-            and not ctx.invoked_with
-            in [
-                "play",
-                "join",
-            ]
-            and ctx.invoked_with
-            in [
-                str(command)
-                for command in self.music.commands
-                if str(command) not in ["play", "join"]
-            ]
-        ):
-            await ctx.send(
-                embed=discord.Embed(
-                    title="Error",
-                    description="I am not in a voice channel.",
-                    color=discord.Color.red(),
-                )
-            )
-            return False
+                return False
+            await ctx.author.voice.channel.connect(cls=wavelink.Player)
+            return True
         return True
 
     @commands.hybrid_group()
@@ -212,8 +200,13 @@ class Music(commands.Cog):
         member: discord.Member,
         before: discord.VoiceState,
         after: discord.VoiceState,
-    ):
-        pass
+    ):  # wavelink doesn't disconnect automatically not pog champ
+        if member.id == self.bot.user.id:
+            if after.channel is None:
+                vc: wavelink.Player = get(
+                    self.bot.voice_clients, guild__id=member.guild.id
+                )
+                await vc.disconnect()
 
     @music.command()
     async def join(
@@ -224,6 +217,14 @@ class Music(commands.Cog):
         """
         if not channel:
             channel = ctx.author.voice.channel
+        if not channel:
+            return await ctx.send(
+                embed=discord.Embed(
+                    title="No channel to join",
+                    description="You need to be in a voice channel or specify one.",
+                    color=discord.Color.red(),
+                )
+            )
         await ctx.send(
             embed=discord.Embed(
                 title="Joining",
@@ -252,28 +253,35 @@ class Music(commands.Cog):
                 color=discord.Color.yellow(),
             )
         )
-        await ctx.voice_client.disconnect()
-        await ctx.send(
-            embed=discord.Embed(
-                title="Left",
-                description="Left {}".format(ctx.guild.me.voice.channel.mention),
-                color=discord.Color.green(),
+        try:
+            await ctx.voice_client.disconnect()
+            await ctx.send(
+                embed=discord.Embed(
+                    title="Left",
+                    description="Left {}".format(ctx.guild.me.voice.channel.mention),
+                    color=discord.Color.green(),
+                )
             )
-        )
+        except:
+            return await ctx.send(
+                embed=discord.Embed(
+                    title="Failed to disconnect", color=discord.Color.red()
+                )
+            )
 
     @music.command()
     async def play(
         self,
         ctx: commands.Context,
+        query: str,
         source: Enum_Source = Enum_Source.YouTube,
-        *,
-        query: str = None,
     ):
 
         """
         Play a song
         """
-        if ctx.author.voice.channel and not ctx.voice_client:
+
+        if ctx.author.voice and not ctx.voice_client:
             vc: wavelink.Player = await ctx.author.voice.channel.connect(
                 cls=wavelink.Player
             )
@@ -289,6 +297,7 @@ class Music(commands.Cog):
                     )
                 )
         vc.loop = Type_Loop.NONE
+        await vc.set_volume(0.5)
         try:
             track = None
             if ctx.message.attachments:
@@ -320,14 +329,18 @@ class Music(commands.Cog):
                         wavelink.YouTubeTrack, query
                     )
                 )[0]
+            elif "spotify.com" in query and ("playlist" in query or "album" in query):
+                track = await wavelink.NodePool.get_node().get_tracks(
+                    query=query, cls=spotify.SpotifyTrack
+                )
             elif "spotify.com" in query and (
                 not "playlist" in query or not "album" in query
             ):
-                track = await spotify.SpotifyTrack.search(query, return_first=True)
-            elif "spotify.com" in query and (
-                not "playlist" in query or not "album" in query
-            ):
-                track = await spotify.SpotifyTrack.search(query)
+                track = (
+                    await wavelink.NodePool.get_node().get_tracks(
+                        query=query, cls=spotify.SpotifyTrack
+                    )
+                )[0]
             elif "youtube.com" in query and "list" in query:
                 track = await wavelink.NodePool.get_node().get_tracks(
                     query, cls=wavelink.YouTubePlaylist
@@ -353,14 +366,7 @@ class Music(commands.Cog):
                     track = await spotify.SpotifyTrack.search(query)
                 elif source == Enum_Source.YouTubePlaylist:
                     track = await wavelink.YouTubeTrack.search(query)
-        except wavelink.errors.LoadTrackError:
-            return await ctx.send(
-                embed=discord.Embed(
-                    title="Error",
-                    description="Could not load track.",
-                    color=discord.Color.red(),
-                )
-            )
+
         except wavelink.errors.LavalinkException as e:
             return await ctx.send(
                 embed=discord.Embed(
@@ -774,6 +780,175 @@ class Music(commands.Cog):
         await ctx.send(embed=await self.info(vc.track, ctx, vc))
 
     @music.command()
+    async def add(
+        self,
+        ctx: commands.Context,
+        query: str,
+        source: Enum_Source = Enum_Source.YouTube,
+    ):
+        """
+        Add music to a queue (incase of wavelink being bad)
+        """
+        if ctx.author.voice and not ctx.voice_client:
+            vc: wavelink.Player = await ctx.author.voice.channel.connect(
+                cls=wavelink.Player
+            )
+        else:
+            if ctx.voice_client:
+                vc: wavelink.Player = ctx.voice_client
+            else:
+                return await ctx.send(
+                    embed=discord.Embed(
+                        title="Error",
+                        description="You must be in a voice channel to use this command.",
+                        color=discord.Color.red(),
+                    )
+                )
+        vc.loop = Type_Loop.NONE
+        try:
+            track = None
+            if ctx.message.attachments:
+                track = []
+                count = 1
+                for attachment in ctx.message.attachments:
+                    if (
+                        not "audio" in attachment.content_type.split("/")[0]
+                        or not "video" in attachment.content_type.split("/")[0]
+                    ):
+                        await ctx.send(
+                            embed=discord.Embed(
+                                title="Error",
+                                description=f"Attachment number {count} has wrong content type.\nSkipping",
+                            )
+                        )
+                        continue
+                    count += 1
+                    track.append(
+                        (
+                            await wavelink.NodePool.get_node().get_tracks(
+                                wavelink.Track, attachment.url
+                            )[0]
+                        )
+                    )
+            elif "youtube.com" in query and "watch" in query:  # youtube link
+                track = (
+                    await wavelink.NodePool.get_node().get_tracks(
+                        wavelink.YouTubeTrack, query
+                    )
+                )[0]
+            elif "spotify.com" in query and ("playlist" in query or "album" in query):
+                track = await wavelink.NodePool.get_node().get_tracks(
+                    query=query, cls=spotify.SpotifyTrack
+                )
+            elif "spotify.com" in query and (
+                not "playlist" in query or not "album" in query
+            ):
+                track = await wavelink.NodePool.get_node().get_tracks(
+                    query=query, cls=spotify.SpotifyTrack
+                )[0]
+            elif "youtube.com" in query and "list" in query:
+                track = await wavelink.NodePool.get_node().get_tracks(
+                    query, cls=wavelink.YouTubePlaylist
+                )
+            elif "soundcloud.com" in query and not "sets" in query:
+                track = (
+                    await wavelink.NodePool.get_node().get_tracks(
+                        query=query, cls=wavelink.SoundCloudTrack
+                    )
+                )[0]
+            elif "soundcloud.com" in query and "sets" in query:
+                track = await wavelink.NodePool.get_node().get_tracks(
+                    query=query, cls=wavelink.SoundCloudTrack
+                )
+            else:
+                if source == Enum_Source.YouTube:
+                    track = await wavelink.YouTubeTrack.search(query, return_first=True)
+                elif source == Enum_Source.SoundCloud:
+                    track = (await wavelink.SoundCloudTrack.search(query))[0]
+                elif source == Enum_Source.Spotify:
+                    track = await spotify.SpotifyTrack.search(query, return_first=True)
+                elif source == Enum_Source.SpotifyPlaylist:
+                    track = await spotify.SpotifyTrack.search(query)
+                elif source == Enum_Source.YouTubePlaylist:
+                    track = await wavelink.YouTubeTrack.search(query)
+
+        except wavelink.errors.LavalinkException as e:
+            return await ctx.send(
+                embed=discord.Embed(
+                    title="Error",
+                    description=f"Lavalink server error.\n```py\nLavalinkException: {str(e)}\n```",
+                    color=discord.Color.red(),
+                )
+            )
+        if not track:
+            return await ctx.send(
+                embed=discord.Embed(
+                    title="Error",
+                    description="Could not find a track with that name. ",
+                    color=discord.Color.red(),
+                )
+            )
+        if isinstance(track, (tuple, list)):
+            for track_ in track:
+                try:
+                    self.bindings[ctx.guild.id].append(
+                        {
+                            "track": track_,
+                            "vc": vc,
+                            "requester": ctx.author,
+                            "channel": await ctx.guild.fetch_channel(ctx.channel.id),
+                        }
+                    )
+                except (KeyError, AttributeError):
+                    self.bindings[ctx.guild.id] = [
+                        {
+                            "track": track,
+                            "vc": ctx.voice_client,
+                            "requester": ctx.author,
+                            "channel": await ctx.guild.fetch_channel(ctx.channel.id),
+                        }
+                    ]
+                await ctx.send(
+                    embed=(
+                        discord.Embed(
+                            title=f"Added {track_.title} to the queue",
+                            color=discord.Color.green(),
+                        )
+                    ),
+                    delete_after=2,
+                )
+
+                await vc.queue.put_wait(track_)
+        else:
+            try:
+                self.bindings[ctx.guild.id].append(
+                    {
+                        "track": track,
+                        "vc": vc,
+                        "requester": ctx.author,
+                        "channel": await ctx.guild.fetch_channel(ctx.channel.id),
+                    }
+                )
+            except (KeyError, AttributeError):
+                self.bindings[ctx.guild.id] = [
+                    {
+                        "track": track,
+                        "vc": ctx.voice_client,
+                        "requester": ctx.author,
+                        "channel": await ctx.guild.fetch_channel(ctx.channel.id),
+                    }
+                ]
+
+            await vc.queue.put_wait(track)
+            await ctx.send(
+                embed=discord.Embed(
+                    title=f"Added {track.title} to the queue",
+                    color=discord.Color.green(),
+                )
+            )
+        await vc.play(vc.queue[0]) if not vc.is_playing() else None
+
+    @music.command()
     async def queue(self, ctx: commands.Context):
         if not ctx.author.voice.channel:
             return await ctx.send(
@@ -904,10 +1079,6 @@ class Music(commands.Cog):
                 description=f"Click link below to started!\n{await self.together.create_link(ctx.author.voice.channel.id,application.value)}",
             )
         )
-
-    @music.command()
-    async def apply_single_filter(self, ctx: commands.Context, filters: Enum_Filters):
-        pass
 
 
 async def setup(bot):

@@ -1,0 +1,9 @@
+from _typeshed import Incomplete
+from discord.ext import commands
+
+class Events(commands.Cog):
+    bot: Incomplete
+    def __init__(self, bot: commands.Bot) -> None: ...
+    async def on_command_error(self, ctx: commands.Context, error: Exception): ...
+
+async def setup(bot: commands.Bot): ...

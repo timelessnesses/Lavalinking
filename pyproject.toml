@@ -16,10 +16,10 @@ jishaku = "^2.5.0"
 psutil = "^5.9.1"
 discord-ext-menus = {git = "https://github.com/Rapptz/discord-ext-menus"}
 python-dotenv = "^0.20.0"
-wavelink = "^1.3.1"
 PyNaCl = "^1.5.0"
 humanize = "^4.2.3"
 discord-together = "^1.2.6"
+wavelink = {git = "https://github.com/wladbelsky/Wavelink"}
 
 [tool.poetry.dev-dependencies]
 black = "^22.3.0"
