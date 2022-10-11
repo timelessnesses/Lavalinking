@@ -1,7 +1,8 @@
 import discord
-from . import utils as utils
 from _typeshed import Incomplete
 from discord.ext import commands
+
+from . import utils as utils
 
 class Stuff(commands.Cog):
     async def on_message(self, message: discord.Message): ...
