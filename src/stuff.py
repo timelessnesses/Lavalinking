@@ -57,7 +57,7 @@ class Stuff(
         return "💭"
 
     @commands.hybrid_command(name="credits", aliases=["c"])
-    async def credits(self, ctx) -> str:
+    async def credits(self, ctx):
         """
         Shows the credits.
         """
@@ -65,7 +65,9 @@ class Stuff(
             title="Credits", description="Thanks to everyone who using this bot!"
         )
 
-        embed.add_field(name="Creator", value="[Unpredictable#9443] ")
+        timeless = await self.bot.fetch_user(890913140278181909)
+
+        embed.add_field(name="Creator", value=f"{timeless.mention} ({str(timeless)})")
         embed.add_field(
             name="The bot is also open-source!",
             value="https://github.com/timelessnesses/music-lavalink-bot",

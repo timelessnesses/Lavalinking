@@ -126,9 +126,6 @@ async def main():
                 log.info(
                     f"Started with version {bot.version_} and started at {bot.start_time}"
                 )
-                if os.environ.get("IS_REPLIT"):
-                    start()
-                    log.info("REPLIT detected opening webserver for recieve pinging")
                 try:
                     await bot.start(config.token)
                 except discord.errors.HTTPException:
