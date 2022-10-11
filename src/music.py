@@ -31,14 +31,14 @@ load_dotenv()
 
 
 class Alternative_Context:
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         for key, value in kwargs.items():
             setattr(self, key, value)
 
     def __getattr__(self, name):
         return self.__dict__.get(name)
 
-    def __setattr__(self, name, value):
+    def __setattr__(self, name, value) -> None:
         self.__dict__[name] = value
 
 
@@ -52,7 +52,6 @@ class Music(commands.Cog):
         self.now_playing2: typing.Dict[int, wavelink.Track] = {}
 
     async def connect(self):
-        print("connected")
         await self.bot.wait_until_ready()
         client: wavelink.ext.spotify.SpotifyClient = None
         if config.spotify_client_id and config.spotify_client_secret:
@@ -67,7 +66,6 @@ class Music(commands.Cog):
             password=config.lavalink_password,
             spotify_client=client,
         )
-        print("connected for real")
         self.client = client
         self.together = await DiscordTogether(config.token)
 
@@ -304,8 +302,6 @@ class Music(commands.Cog):
                 )
         vc.loop = Type_Loop.NONE
         await vc.set_volume(0.5)
-        print(source)
-        print("o")
         try:
             track = None
             if ctx.message.attachments:

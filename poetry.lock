@@ -223,7 +223,7 @@ resolved_reference = "8686b5d1bbc1d3c862292eb436ab630d6e9c9b53"
 
 [[package]]
 name = "discord.py"
-version = "2.1.0a4598+g8aaeb6ac"
+version = "2.1.0a4606+g7b595fb0"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -243,7 +243,7 @@ voice = ["PyNaCl (>=1.3.0,<1.6)"]
 type = "git"
 url = "https://github.com/Rapptz/discord.py"
 reference = "HEAD"
-resolved_reference = "7b595fb052c82de1fca8b89d6aacc908f1978a31"
+resolved_reference = "d0625154edeed584853c2a2c3871b612c127d4c4"
 
 [[package]]
 name = "discord-together"
@@ -675,14 +675,21 @@ watchmedo = ["PyYAML (>=3.10)"]
 
 [[package]]
 name = "wavelink"
-version = "1.3.2"
+version = "1.0.0"
 description = "A robust and powerful Lavalink wrapper for discord.py and derivatives."
 category = "main"
 optional = false
 python-versions = "*"
+develop = false
 
 [package.dependencies]
 aiohttp = ">=3.7.4,<4"
+
+[package.source]
+type = "git"
+url = "https://github.com/wladbelsky/Wavelink"
+reference = "HEAD"
+resolved_reference = "03a5545bd99d38bf95111bf2072274207333fb5b"
 
 [[package]]
 name = "Werkzeug"
@@ -744,7 +751,7 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "98887bd9f0bd69d9aa8f2b192871049e04c9a79fd908799049359f5433754301"
+content-hash = "e3b67fbfc89a7d73c12e919a233064022f5e574cc989c9c6c204d72864ca4ebe"
 
 [metadata.files]
 aiodns = [
@@ -1656,10 +1663,7 @@ watchdog = [
     {file = "watchdog-2.1.9-py3-none-win_ia64.whl", hash = "sha256:ad576a565260d8f99d97f2e64b0f97a48228317095908568a9d5c786c829d428"},
     {file = "watchdog-2.1.9.tar.gz", hash = "sha256:43ce20ebb36a51f21fa376f76d1d4692452b2527ccd601950d69ed36b9e21609"},
 ]
-wavelink = [
-    {file = "wavelink-1.3.2-py3-none-any.whl", hash = "sha256:01c6915f2e59c4ba58b4fb10b96add6c9f5b40d7eff2043642f6e43da06e0e1c"},
-    {file = "wavelink-1.3.2.tar.gz", hash = "sha256:36c151684004e70967e350203dbef72a2b7ad7aba3e23288d6e9fb4ba8294f35"},
-]
+wavelink = []
 Werkzeug = [
     {file = "Werkzeug-2.2.2-py3-none-any.whl", hash = "sha256:f979ab81f58d7318e064e99c4506445d60135ac5cd2e177a2de0089bfd4c9bd5"},
     {file = "Werkzeug-2.2.2.tar.gz", hash = "sha256:7ea2d48322cc7c0f8b3a215ed73eabd7b5d75d0b50e31ab006286ccff9e00b8f"},
