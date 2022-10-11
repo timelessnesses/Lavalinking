@@ -1,34 +1,22 @@
-from typing import Any, Dict, List, Optional, Union
-
 import discord
-from _typeshed import Incomplete
-from discord.ext import commands, menus
-
 from .utils import time as time
 from .utils.paginator import Pages as Pages
+from _typeshed import Incomplete
+from discord.ext import commands, menus
+from typing import Any, Dict, List, Optional, Union
 
 class GroupHelpPageSource(menus.ListPageSource):
     group: Incomplete
     prefix: Incomplete
     title: Incomplete
     description: Incomplete
-    def __init__(
-        self,
-        group: Union[commands.Group, commands.Cog],
-        commands: List[commands.Command],
-        *,
-        prefix: str
-    ) -> None: ...
+    def __init__(self, group: Union[commands.Group, commands.Cog], commands: List[commands.Command], *, prefix: str) -> None: ...
     async def format_page(self, menu, commands): ...
 
-class HelpSelectMenu(discord.ui.Select["HelpMenu"]):
+class HelpSelectMenu(discord.ui.Select['HelpMenu']):
     commands: Incomplete
     bot: Incomplete
-    def __init__(
-        self,
-        commands: Dict[commands.Cog, List[commands.Command]],
-        bot: commands.AutoShardedBot,
-    ) -> None: ...
+    def __init__(self, commands: Dict[commands.Cog, List[commands.Command]], bot: commands.AutoShardedBot) -> None: ...
     async def callback(self, interaction: discord.Interaction): ...
 
 class FrontPageSource(menus.PageSource):
@@ -40,14 +28,10 @@ class FrontPageSource(menus.PageSource):
 
 class HelpMenu(Pages):
     def __init__(self, source: menus.PageSource, ctx: commands.Context) -> None: ...
-    def add_categories(
-        self, commands: Dict[commands.Cog, List[commands.Command]]
-    ) -> None: ...
+    def add_categories(self, commands: Dict[commands.Cog, List[commands.Command]]) -> None: ...
     source: Incomplete
     current_page: int
-    async def rebind(
-        self, source: menus.PageSource, interaction: discord.Interaction
-    ) -> None: ...
+    async def rebind(self, source: menus.PageSource, interaction: discord.Interaction) -> None: ...
 
 class PaginatedHelpCommand(commands.HelpCommand):
     def __init__(self) -> None: ...

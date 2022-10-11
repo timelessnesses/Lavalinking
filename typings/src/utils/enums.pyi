@@ -1,5 +1,4 @@
 import enum
-
 from _typeshed import Incomplete
 
 class Enum_Source(enum.Enum):
