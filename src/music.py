@@ -985,7 +985,7 @@ class Music(commands.Cog):
             color=discord.Color.green(),
         )
         for x in queue[:50]:
-            embed.add_field(name=f"{count}", value=f"{x}",inline=False)
+            embed.add_field(name=f"{count}", value=f"{x}", inline=False)
             count += 1
         await ctx.send(embed=embed)
 
