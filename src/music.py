@@ -605,7 +605,7 @@ class Music(commands.Cog):
             return await ctx.send(
                 embed=discord.Embed(
                     title="Volume",
-                    description=f"The volume is currently set to {volume}%.",
+                    description=f"The volume is currently set to {int(vc.volume)}%.",
                     color=discord.Color.green(),
                 )
             )
@@ -613,7 +613,7 @@ class Music(commands.Cog):
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
-                    description="The volume must be between 0 and 1000.",
+                    description="The volume must be between 0 and 500.",
                     color=discord.Color.red(),
                 )
             )
@@ -621,7 +621,7 @@ class Music(commands.Cog):
         await ctx.send(
             embed=discord.Embed(
                 title="Volume",
-                description=f"The volume has been set to {vc.volume * 100}.",
+                description=f"The volume has been set to {int(vc.volume * 100)}.",
                 color=discord.Color.green(),
             )
         )
@@ -985,7 +985,7 @@ class Music(commands.Cog):
             color=discord.Color.green(),
         )
         for x in queue[:50]:
-            embed.add_field(name=f"{count}", value=f"{x}")
+            embed.add_field(name=f"{count}", value=f"{x}",inline=False)
             count += 1
         await ctx.send(embed=embed)
 
