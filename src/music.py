@@ -285,6 +285,7 @@ class Music(commands.Cog):
             vc: wavelink.Player = await ctx.author.voice.channel.connect(
                 cls=wavelink.Player
             )
+            await vc.set_volume(100)
         else:
             if ctx.voice_client:
                 vc: wavelink.Player = ctx.voice_client
@@ -297,7 +298,6 @@ class Music(commands.Cog):
                     )
                 )
         vc.loop = Type_Loop.NONE
-        await vc.set_volume(0.5)
         try:
             track = None
             if ctx.message.attachments:
@@ -617,7 +617,7 @@ class Music(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
-        await vc.set_volume(volume / 100)
+        await vc.set_volume(volume)
         await ctx.send(
             embed=discord.Embed(
                 title="Volume",
