@@ -27,7 +27,7 @@ isort = "^5.10.1"
 autoflake = "^1.7"
 flake8 = "^5.0.4"
 watchdog = "^2.1.9"
-pylint = "^2.14.3"
+pylint = "^2.15.9"
 mypy = "*"
 guppy3 = "^3.1.2"
 
