@@ -621,7 +621,7 @@ class Music(commands.Cog):
         await ctx.send(
             embed=discord.Embed(
                 title="Volume",
-                description=f"The volume has been set to {int(vc.volume * 100)}.",
+                description=f"The volume has been set to {int(vc.volume)}.",
                 color=discord.Color.green(),
             )
         )
