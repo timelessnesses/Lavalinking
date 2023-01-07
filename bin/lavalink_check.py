@@ -1,5 +1,8 @@
 import os
-lavalink_download_url = "https://github.com/freyacodes/Lavalink/releases/download/3.6.2/Lavalink.jar"
+
+lavalink_download_url = (
+    "https://github.com/freyacodes/Lavalink/releases/download/3.6.2/Lavalink.jar"
+)
 
 install_zulu_command = """
     echo "Installing Zulu JDK 19"
@@ -104,6 +107,7 @@ ExecStart=/usr/bin/java -jar Lavalink.jar
 WantedBy=multi-user.target
 """
 
+
 def check_env_vars():
     expect = [
         "MUSIC_TOKEN",
@@ -114,55 +118,63 @@ def check_env_vars():
         "MUSIC_LAVALINK_PASSWORD",
         "MUSIC_LAVALINK_HTTPS",
         "MUSIC_PREFIX",
-        "MUSIC_OWNERS_ID"
+        "MUSIC_OWNERS_ID",
     ]
-    for key,val in os.environ.items():
+    for key, val in os.environ.items():
         if key in expect:
             expect.remove(key)
-            
+
     assert len(expect) > 0, "Missing environment variables: " + ", ".join(expect)
-    
+
+
 def check_lavalink():
     expect = {
         "MUSIC_LAVALINK_HOST": "localhost",
         "MUSIC_LAVALINK_PORT": 2333,
         "MUSIC_LAVALINK_PASSWORD": "youshallnotpass",
-        "MUSIC_LAVALINK_HTTPS": "false"
+        "MUSIC_LAVALINK_HTTPS": "false",
     }
-    for key,val in os.environ.items():
+    for key, val in os.environ.items():
         if key in expect:
             if val == expect[key]:
-                del expect[key] # likely to be a default value, so remove it from the list
+                del expect[
+                    key
+                ]  # likely to be a default value, so remove it from the list
                 return
-            
+
     # if its default value then likely going to setup local lavalink server
     if len(expect) == 0:
         return
     install_lavalink()
     run_lavalink()
-    
+
+
 def install_zulu_jdk():
-    if not os.system("java -version"): # already have something java installed so i don't really care
+    if not os.system(
+        "java -version"
+    ):  # already have something java installed so i don't really care
         return
     assert not os.system(install_zulu_command), "Failed to install Zulu JDK 19"
-    
+
+
 def install_lavalink():
     install_zulu_jdk()
     assert not os.system(install_lavalink_command), "Failed to install Lavalink"
-    with open ("application.yml", "w") as f:
+    with open("application.yml", "w") as f:
         f.write(default_lavalink_config)
     # now need to run lavalink as service
+
 
 def run_lavalink():
     with open("/etc/systemd/system/lavalink.service", "w") as f:
         f.write(install_lavalink_service)
     assert not os.system("systemctl daemon-reload"), "Failed to reload systemd"
-    assert not os.system("systemctl enable lavalink"), "Failed to enable lavalink service"
+    assert not os.system(
+        "systemctl enable lavalink"
+    ), "Failed to enable lavalink service"
     assert not os.system("systemctl start lavalink"), "Failed to start lavalink service"
+
 
 if __name__ == "__main__":
     check_env_vars()
     check_lavalink()
-    
-    
-    
