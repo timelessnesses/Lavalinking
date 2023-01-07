@@ -21,9 +21,11 @@ ENV MUSIC_OWNER_IDS=$owner_ids
 RUN pip install --upgrade pip
 RUN pip install poetry
 RUN apk add gcc build-base linux-headers g++ wget
+COPY . ./bot
+RUN ls
+RUN pwd
 RUN poetry install
 RUN apk del gcc build-base linux-headers g++ # save space :)
-COPY . .
 RUN pip install requests
 RUN python3 bin/lavalink_check.py
 CMD make
