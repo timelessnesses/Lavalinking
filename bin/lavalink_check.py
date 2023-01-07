@@ -109,6 +109,7 @@ WantedBy=multi-user.target
 
 
 def check_env_vars():
+    print("Verifying Enviroment Variables")
     expect = [
         "MUSIC_TOKEN",
         "MUSIC_SPOTIFY_CLIENT_ID",
@@ -121,13 +122,14 @@ def check_env_vars():
         "MUSIC_OWNERS_ID",
     ]
     for key, val in os.environ.items():
-        if key in expect:
+        if key in expect and not val: # docker treats empty strings as unset
             expect.remove(key)
 
     assert len(expect) > 0, "Missing environment variables: " + ", ".join(expect)
-
+    print("All environment variables are set")
 
 def check_lavalink():
+    print("Checking if any lavalink related enviroment variables are default to their values")
     expect = {
         "MUSIC_LAVALINK_HOST": "localhost",
         "MUSIC_LAVALINK_PORT": 2333,
@@ -135,45 +137,57 @@ def check_lavalink():
         "MUSIC_LAVALINK_HTTPS": "false",
     }
     for key, val in os.environ.items():
-        if key in expect:
-            if val == expect[key]:
-                del expect[
-                    key
-                ]  # likely to be a default value, so remove it from the list
-                return
+        if key in expect and val == expect[key]:
+            del expect[
+                key
+            ]  # likely to be a default value, so remove it from the list
+            return
 
     # if its default value then likely going to setup local lavalink server
     if len(expect) == 0:
+        print("All enviroment variables are not default to their values. Assuming you have a lavalink server running")
         return
+    print("Some enviroment variables are default to their values. Assuming you want to setup a local lavalink server inside this container")
     install_lavalink()
+    print("Installed lavalink server. Now starting it")
     run_lavalink()
+    print("Successfully started lavalink server")
 
 
 def install_zulu_jdk():
+    print("Checking if any java is installed")
     if not os.system(
         "java -version"
     ):  # already have something java installed so i don't really care
         return
+    print("No java installed. Installing Zulu JDK 19")
     assert not os.system(install_zulu_command), "Failed to install Zulu JDK 19"
 
 
 def install_lavalink():
     install_zulu_jdk()
+    print("Installed Zulu JDK 19. Now installing Lavalink")
     assert not os.system(install_lavalink_command), "Failed to install Lavalink"
+    print("Writing default lavalink config")
     with open("application.yml", "w") as f:
         f.write(default_lavalink_config)
     # now need to run lavalink as service
+    print("Wrote default lavalink config. Lavalink installation is finally done")
 
 
 def run_lavalink():
+    print("Writing lavalink service file")
     with open("/etc/systemd/system/lavalink.service", "w") as f:
         f.write(install_lavalink_service)
+    print("Done writing lavalink service file. Now reloading systemd and enabling lavalink service")
     assert not os.system("systemctl daemon-reload"), "Failed to reload systemd"
+    print("Done reloading systemd. Now enabling lavalink service")
     assert not os.system(
         "systemctl enable lavalink"
     ), "Failed to enable lavalink service"
+    print("Done enabling lavalink service. Now starting lavalink service")
     assert not os.system("systemctl start lavalink"), "Failed to start lavalink service"
-
+    print("Successfully started lavalink service")
 
 if __name__ == "__main__":
     check_env_vars()
