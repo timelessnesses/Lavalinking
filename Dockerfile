@@ -21,7 +21,7 @@ ENV MUSIC_OWNER_IDS=$owner_ids
 RUN pip install --upgrade pip
 RUN pip install poetry
 RUN apk add gcc build-base linux-headers g++ wget
-COPY . ./bot
+COPY . .
 RUN ls
 RUN pwd
 RUN poetry install
