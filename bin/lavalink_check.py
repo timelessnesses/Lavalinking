@@ -122,14 +122,17 @@ def check_env_vars():
         "MUSIC_OWNERS_ID",
     ]
     for key, val in os.environ.items():
-        if key in expect and not val: # docker treats empty strings as unset
+        if key in expect and not val:  # docker treats empty strings as unset
             expect.remove(key)
 
     assert len(expect) > 0, "Missing environment variables: " + ", ".join(expect)
     print("All environment variables are set")
 
+
 def check_lavalink():
-    print("Checking if any lavalink related enviroment variables are default to their values")
+    print(
+        "Checking if any lavalink related enviroment variables are default to their values"
+    )
     expect = {
         "MUSIC_LAVALINK_HOST": "localhost",
         "MUSIC_LAVALINK_PORT": 2333,
@@ -138,16 +141,18 @@ def check_lavalink():
     }
     for key, val in os.environ.items():
         if key in expect and val == expect[key]:
-            del expect[
-                key
-            ]  # likely to be a default value, so remove it from the list
+            del expect[key]  # likely to be a default value, so remove it from the list
             return
 
     # if its default value then likely going to setup local lavalink server
     if len(expect) == 0:
-        print("All enviroment variables are not default to their values. Assuming you have a lavalink server running")
+        print(
+            "All enviroment variables are not default to their values. Assuming you have a lavalink server running"
+        )
         return
-    print("Some enviroment variables are default to their values. Assuming you want to setup a local lavalink server inside this container")
+    print(
+        "Some enviroment variables are default to their values. Assuming you want to setup a local lavalink server inside this container"
+    )
     install_lavalink()
     print("Installed lavalink server. Now starting it")
     run_lavalink()
@@ -179,7 +184,9 @@ def run_lavalink():
     print("Writing lavalink service file")
     with open("/etc/systemd/system/lavalink.service", "w") as f:
         f.write(install_lavalink_service)
-    print("Done writing lavalink service file. Now reloading systemd and enabling lavalink service")
+    print(
+        "Done writing lavalink service file. Now reloading systemd and enabling lavalink service"
+    )
     assert not os.system("systemctl daemon-reload"), "Failed to reload systemd"
     print("Done reloading systemd. Now enabling lavalink service")
     assert not os.system(
@@ -188,6 +195,7 @@ def run_lavalink():
     print("Done enabling lavalink service. Now starting lavalink service")
     assert not os.system("systemctl start lavalink"), "Failed to start lavalink service"
     print("Successfully started lavalink service")
+
 
 if __name__ == "__main__":
     check_env_vars()
