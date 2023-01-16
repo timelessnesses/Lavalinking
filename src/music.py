@@ -46,6 +46,7 @@ class Music(commands.Cog):
         self.skip_votes: typing.Dict[int, typing.List[discord.Member]] = {}
         self.now_playing: typing.Dict[int, typing.Dict] = {}
         self.now_playing2: typing.Dict[int, wavelink.Track] = {}
+        self.playing: typing.Dict[int, bool] = {} # guild and their playing status since wavelink is so unstable
 
     async def connect(self):
         await self.bot.wait_until_ready()
@@ -78,6 +79,7 @@ class Music(commands.Cog):
     async def on_wavelink_track_start(
         self, player: wavelink.Player, track: wavelink.Track
     ):
+        self.playing[player.guild.id] = True
         guild = self.bindings[player.guild.id]
         count = 0
         for binding in guild:
@@ -110,6 +112,7 @@ class Music(commands.Cog):
     async def on_wavelink_track_end(
         self, player: wavelink.Player, track: wavelink.Track, reason: str
     ):
+        self.playing[player.guild.id] = False
         try:
             async with async_timeout.timeout(5):
                 await player.queue.get_wait()
@@ -174,19 +177,6 @@ class Music(commands.Cog):
                 )
             )
             return False
-        if not ctx.voice_client:
-            if not ctx.author.voice:
-                await ctx.send(
-                    embed=discord.Embed(
-                        title="Error",
-                        description="This command needs you to join voice chat",
-                        color=discord.Color.red(),
-                    )
-                )
-                return False
-            await ctx.author.voice.channel.connect(cls=wavelink.Player)
-            return True
-        return True
 
     @commands.hybrid_group()
     async def music(self, ctx: commands.Context):
@@ -246,6 +236,15 @@ class Music(commands.Cog):
         """
         Leave the voice channel
         """
+        if not ctx.author.guild_permissions.manage_guild:
+            await ctx.send(
+                embed=discord.Embed(
+                    title="No permission",
+                    description="You need the manage guild permission to use this command.",
+                    color=discord.Color.red(),
+                )
+            )
+            return
         await ctx.send(
             embed=discord.Embed(
                 title="Leaving",
@@ -415,7 +414,7 @@ class Music(commands.Cog):
 
                 await vc.play(
                     track[0]
-                ) if not vc.is_playing() else await vc.queue.put_wait(track_)
+                ) if not vc.is_playing() or self.playing.get(ctx.guild.id, False) else await vc.queue.put_wait(track_)
         else:
             try:
                 self.bindings[ctx.guild.id].append(
@@ -436,7 +435,7 @@ class Music(commands.Cog):
                     }
                 ]
 
-            await vc.play(track) if not vc.is_playing() else await vc.queue.put_wait(
+            await vc.play(track) if not vc.is_playing() or self.playing.get(ctx.guild.id, False) else await vc.queue.put_wait(
                 track
             )
             await ctx.send(
@@ -459,7 +458,7 @@ class Music(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
-        if not ctx.voice_client.is_playing():
+        if not ctx.voice_client.is_playing() or self.playing.get(ctx.guild.id, False):
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
@@ -490,7 +489,7 @@ class Music(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
-        if not ctx.voice_client.is_playing():
+        if not ctx.voice_client.is_playing() and not self.playing.get(ctx.guild.id, False):
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
@@ -524,7 +523,7 @@ class Music(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
-        if not ctx.voice_client.is_playing():
+        if not ctx.voice_client.is_playing() and not self.playing.get(ctx.guild.id, False):
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
@@ -592,7 +591,7 @@ class Music(commands.Cog):
                 )
             )
 
-        if not ctx.voice_client.is_playing():
+        if not ctx.voice_client.is_playing() and not self.playing.get(ctx.guild.id, False):
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
@@ -639,7 +638,7 @@ class Music(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
-        if not ctx.voice_client.is_playing():
+        if not ctx.voice_client.is_playing() and not self.playing.get(ctx.guild.id, False):
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
@@ -768,7 +767,7 @@ class Music(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
-        if not ctx.voice_client.is_playing():
+        if not ctx.voice_client.is_playing() and not self.playing.get(ctx.guild.id, False):
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
@@ -958,7 +957,7 @@ class Music(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
-        if not ctx.voice_client.is_playing():
+        if not ctx.voice_client.is_playing() and not self.playing.get(ctx.guild.id, False):
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",

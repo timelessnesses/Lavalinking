@@ -5,12 +5,14 @@ This bot is designed to be stateless music bot (no database, no cache, no persis
 
 ## How to host this???
 
-### Requirement
+### Normal
+
+#### Requirement
 
 - Python 3.8 or higher
 - poetry (`pip install poetry`)
 
-### Procedure
+#### Procedure
 
 1. Find your lavalink server [here](https://lavalink.darrennathanael.com/).
 
@@ -52,6 +54,10 @@ lavalink_is_https = True or False based on if you use https or not
 5. Run `python3 bot.py`
 
 6. Enjoy~
+
+### Docker (pain)
+
+1. Build it yourself with [`docker build .`](#building-docker) or clone it with `docker pull ghcr.io/timelessnesses/music-lavalink-bot:latest`
 
 ## Features
 

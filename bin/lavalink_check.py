@@ -1,3 +1,6 @@
+"""
+this script only supports linux only.
+"""
 import os
 
 lavalink_download_url = (

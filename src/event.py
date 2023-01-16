@@ -20,7 +20,7 @@ class Events(commands.Cog):
         )
         discord_version = discord.__version__
         file = MISSING
-        if len(error_message) <= 4096:
+        if len(error_message) <= 4095:
             file = discord.File(io.StringIO(error_message), filename="errorlog.py")
             error_message = "Error is too long consider reading the errorlog.py file."
         if isinstance(error, commands.CommandNotFound):
