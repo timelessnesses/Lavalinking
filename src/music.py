@@ -46,7 +46,9 @@ class Music(commands.Cog):
         self.skip_votes: typing.Dict[int, typing.List[discord.Member]] = {}
         self.now_playing: typing.Dict[int, typing.Dict] = {}
         self.now_playing2: typing.Dict[int, wavelink.Track] = {}
-        self.playing: typing.Dict[int, bool] = {} # guild and their playing status since wavelink is so unstable
+        self.playing: typing.Dict[
+            int, bool
+        ] = {}  # guild and their playing status since wavelink is so unstable
 
     async def connect(self):
         await self.bot.wait_until_ready()
@@ -412,9 +414,9 @@ class Music(commands.Cog):
                     delete_after=2,
                 )
 
-                await vc.play(
-                    track[0]
-                ) if not vc.is_playing() or self.playing.get(ctx.guild.id, False) else await vc.queue.put_wait(track_)
+                await vc.play(track[0]) if not vc.is_playing() or self.playing.get(
+                    ctx.guild.id, False
+                ) else await vc.queue.put_wait(track_)
         else:
             try:
                 self.bindings[ctx.guild.id].append(
@@ -435,9 +437,9 @@ class Music(commands.Cog):
                     }
                 ]
 
-            await vc.play(track) if not vc.is_playing() or self.playing.get(ctx.guild.id, False) else await vc.queue.put_wait(
-                track
-            )
+            await vc.play(track) if not vc.is_playing() or self.playing.get(
+                ctx.guild.id, False
+            ) else await vc.queue.put_wait(track)
             await ctx.send(
                 embed=discord.Embed(
                     title=f"Added {track.title} to the queue",
@@ -489,7 +491,9 @@ class Music(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
-        if not ctx.voice_client.is_playing() and not self.playing.get(ctx.guild.id, False):
+        if not ctx.voice_client.is_playing() and not self.playing.get(
+            ctx.guild.id, False
+        ):
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
@@ -523,7 +527,9 @@ class Music(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
-        if not ctx.voice_client.is_playing() and not self.playing.get(ctx.guild.id, False):
+        if not ctx.voice_client.is_playing() and not self.playing.get(
+            ctx.guild.id, False
+        ):
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
@@ -591,7 +597,9 @@ class Music(commands.Cog):
                 )
             )
 
-        if not ctx.voice_client.is_playing() and not self.playing.get(ctx.guild.id, False):
+        if not ctx.voice_client.is_playing() and not self.playing.get(
+            ctx.guild.id, False
+        ):
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
@@ -638,7 +646,9 @@ class Music(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
-        if not ctx.voice_client.is_playing() and not self.playing.get(ctx.guild.id, False):
+        if not ctx.voice_client.is_playing() and not self.playing.get(
+            ctx.guild.id, False
+        ):
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
@@ -767,7 +777,9 @@ class Music(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
-        if not ctx.voice_client.is_playing() and not self.playing.get(ctx.guild.id, False):
+        if not ctx.voice_client.is_playing() and not self.playing.get(
+            ctx.guild.id, False
+        ):
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
@@ -957,7 +969,9 @@ class Music(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
-        if not ctx.voice_client.is_playing() and not self.playing.get(ctx.guild.id, False):
+        if not ctx.voice_client.is_playing() and not self.playing.get(
+            ctx.guild.id, False
+        ):
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
