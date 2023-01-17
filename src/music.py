@@ -21,8 +21,10 @@ from wavelink.ext import spotify
 from .utils.enums import Enum_Applications, Enum_Source, Type_Loop
 
 sys.path.append("..")
-from config import config
 import os
+
+from config import config
+
 load_dotenv()
 
 
@@ -37,15 +39,19 @@ class Alternative_Context:
     def __setattr__(self, name, value) -> None:
         self.__dict__[name] = value
 
+
 # basic implementation of loop queue
 class Loop_Queue:
     def __init__(self, *tracks: wavelink.Track):
         self.tracks = tracks
         self.current = 0
-        print("got initialized with" + '\n'.join([str(track.title) for track in tracks]))
-        
+        print(
+            "got initialized with" + "\n".join([str(track.title) for track in tracks])
+        )
+
     def __iter__(self):
         return self.tracks.__iter__()
+
     def next(self):
         try:
             self.current += 1
@@ -53,7 +59,7 @@ class Loop_Queue:
         except IndexError:
             self.current = 0
             return self.tracks[self.current]
-    
+
 
 class Music(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -62,13 +68,10 @@ class Music(commands.Cog):
         self.bindings: typing.Dict[int, typing.List[typing.Dict]] = {}
         self.skip_votes: typing.Dict[int, typing.List[discord.Member]] = {}
         self.now_playing: typing.Dict[int, typing.Dict] = {}
-        self.playing: typing.Dict[int, bool] = {} # guild and their playing status since wavelink is so unstable
-        self.owners = config.owners_id + list(self.bot.owner_ids)
-        self.owners.append(self.bot.owner_id)
-        self.owners = {int(id) for id in self.owners if not id is None}
-        self.replace_queue: typing.Dict[int, typing.Dict[wavelink.Track, int]] = {} # a replace queue for when someone want to replace the music (the requester also need to participate in vote)
-        self.queue_loop: typing.Dict[int, Loop_Queue] = {} # a queue loop for when someone want to loop the queue
-
+        self.now_playing2: typing.Dict[int, wavelink.Track] = {}
+        self.playing: typing.Dict[
+            int, bool
+        ] = {}  # guild and their playing status since wavelink is so unstable
 
     async def connect(self):
         await self.bot.wait_until_ready()
@@ -115,7 +118,9 @@ class Music(commands.Cog):
                 msg = await channel.send(
                     embed=await self.info(track, ctx, binding["vc"])
                 )
-                t = tasks.loop(seconds=5)(self.loop_time_update) # 5 seconds of not smashing discord api with requests :D
+                t = tasks.loop(seconds=5)(
+                    self.loop_time_update
+                )  # 5 seconds of not smashing discord api with requests :D
                 t.start(track, msg, ctx, binding["vc"])
                 binding["msg"] = msg
                 self.now_playing[player.guild.id] = binding.copy()
@@ -166,7 +171,9 @@ class Music(commands.Cog):
             if loop == Type_Loop.SONG:
                 await player.play(track)
             elif loop == Type_Loop.QUEUE:
-                if reason == "FINISHED": # ignore replace since skip command replace song
+                if (
+                    reason == "FINISHED"
+                ):  # ignore replace since skip command replace song
                     await player.play(self.queue_loop[player.guild.id].next())
             else:
                 del self.bindings[player.guild.id][
@@ -201,7 +208,7 @@ class Music(commands.Cog):
                 )
             )
             return False
-        elif int(os.getenv("DEBUG",0)) and ctx.author.id not in self.owners:
+        elif int(os.getenv("DEBUG", 0)) and ctx.author.id not in self.owners:
             return False
         return True
 
@@ -324,7 +331,7 @@ class Music(commands.Cog):
                 )
         if not vc.__dict__.get("loop"):
             vc.loop = Type_Loop.NONE
-        if not query: # none
+        if not query:  # none
             # get last song in the queue
             try:
                 async with async_timeout.timeout(1):
@@ -454,9 +461,9 @@ class Music(commands.Cog):
                     delete_after=2,
                 )
 
-                await vc.play(
-                    track[0]
-                ) if not self.playing.get(ctx.guild.id, False) else await vc.queue.put_wait(track_)
+                await vc.play(track[0]) if not vc.is_playing() or self.playing.get(
+                    ctx.guild.id, False
+                ) else await vc.queue.put_wait(track_)
         else:
             try:
                 self.bindings[ctx.guild.id].append(
@@ -477,9 +484,9 @@ class Music(commands.Cog):
                     }
                 ]
 
-            await vc.play(track) if not self.playing.get(ctx.guild.id, False) else await vc.queue.put_wait(
-                track
-            )
+            await vc.play(track) if not vc.is_playing() or self.playing.get(
+                ctx.guild.id, False
+            ) else await vc.queue.put_wait(track)
             await ctx.send(
                 embed=discord.Embed(
                     title=f"Added {track.title} to the queue",
@@ -531,7 +538,9 @@ class Music(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
-        if not ctx.voice_client.is_playing() and not self.playing.get(ctx.guild.id, False):
+        if not ctx.voice_client.is_playing() and not self.playing.get(
+            ctx.guild.id, False
+        ):
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
@@ -567,7 +576,9 @@ class Music(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
-        if not ctx.voice_client.is_playing() and not self.playing.get(ctx.guild.id, False):
+        if not ctx.voice_client.is_playing() and not self.playing.get(
+            ctx.guild.id, False
+        ):
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
@@ -598,7 +609,7 @@ class Music(commands.Cog):
                 )
                 self.queue_loop[ctx.guild.id] = Loop_Queue(
                     self.now_playing[ctx.guild.id]["track"],
-                    *[track for track in vc.queue]
+                    *[track for track in vc.queue],
                 )
                 print([track for track in vc.queue])
             except AttributeError:
@@ -606,7 +617,7 @@ class Music(commands.Cog):
                 # copy all queues and current playing track to a new queue
                 self.queue_loop[ctx.guild.id] = Loop_Queue(
                     self.now_playing[ctx.guild.id]["track"],
-                    *[track for track in vc.queue]
+                    *[track for track in vc.queue],
                 )
                 print([track for track in vc.queue])
             await ctx.send(
@@ -647,7 +658,9 @@ class Music(commands.Cog):
                 )
             )
 
-        if not ctx.voice_client.is_playing() and not self.playing.get(ctx.guild.id, False):
+        if not ctx.voice_client.is_playing() and not self.playing.get(
+            ctx.guild.id, False
+        ):
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
@@ -694,7 +707,9 @@ class Music(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
-        if not ctx.voice_client.is_playing() and not self.playing.get(ctx.guild.id, False):
+        if not ctx.voice_client.is_playing() and not self.playing.get(
+            ctx.guild.id, False
+        ):
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
@@ -829,7 +844,9 @@ class Music(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
-        if not ctx.voice_client.is_playing() and not self.playing.get(ctx.guild.id, False):
+        if not ctx.voice_client.is_playing() and not self.playing.get(
+            ctx.guild.id, False
+        ):
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
@@ -1019,7 +1036,9 @@ class Music(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
-        if not ctx.voice_client.is_playing() and not self.playing.get(ctx.guild.id, False):
+        if not ctx.voice_client.is_playing() and not self.playing.get(
+            ctx.guild.id, False
+        ):
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
