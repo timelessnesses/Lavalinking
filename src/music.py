@@ -22,7 +22,7 @@ from .utils.enums import Enum_Applications, Enum_Source, Type_Loop
 
 sys.path.append("..")
 from config import config
-
+import os
 load_dotenv()
 
 
@@ -37,6 +37,23 @@ class Alternative_Context:
     def __setattr__(self, name, value) -> None:
         self.__dict__[name] = value
 
+# basic implementation of loop queue
+class Loop_Queue:
+    def __init__(self, *tracks: wavelink.Track):
+        self.tracks = tracks
+        self.current = 0
+        print("got initialized with" + '\n'.join([str(track.title) for track in tracks]))
+        
+    def __iter__(self):
+        return self.tracks.__iter__()
+    def next(self):
+        try:
+            self.current += 1
+            return self.tracks[self.current]
+        except IndexError:
+            self.current = 0
+            return self.tracks[self.current]
+    
 
 class Music(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -45,8 +62,13 @@ class Music(commands.Cog):
         self.bindings: typing.Dict[int, typing.List[typing.Dict]] = {}
         self.skip_votes: typing.Dict[int, typing.List[discord.Member]] = {}
         self.now_playing: typing.Dict[int, typing.Dict] = {}
-        self.now_playing2: typing.Dict[int, wavelink.Track] = {}
         self.playing: typing.Dict[int, bool] = {} # guild and their playing status since wavelink is so unstable
+        self.owners = config.owners_id + list(self.bot.owner_ids)
+        self.owners.append(self.bot.owner_id)
+        self.owners = {int(id) for id in self.owners if not id is None}
+        self.replace_queue: typing.Dict[int, typing.Dict[wavelink.Track, int]] = {} # a replace queue for when someone want to replace the music (the requester also need to participate in vote)
+        self.queue_loop: typing.Dict[int, Loop_Queue] = {} # a queue loop for when someone want to loop the queue
+
 
     async def connect(self):
         await self.bot.wait_until_ready()
@@ -80,6 +102,7 @@ class Music(commands.Cog):
         self, player: wavelink.Player, track: wavelink.Track
     ):
         self.playing[player.guild.id] = True
+        print("Track started " + str(self.playing))
         guild = self.bindings[player.guild.id]
         count = 0
         for binding in guild:
@@ -92,7 +115,7 @@ class Music(commands.Cog):
                 msg = await channel.send(
                     embed=await self.info(track, ctx, binding["vc"])
                 )
-                t = tasks.loop(seconds=1)(self.loop_time_update)
+                t = tasks.loop(seconds=5)(self.loop_time_update) # 5 seconds of not smashing discord api with requests :D
                 t.start(track, msg, ctx, binding["vc"])
                 binding["msg"] = msg
                 self.now_playing[player.guild.id] = binding.copy()
@@ -113,12 +136,12 @@ class Music(commands.Cog):
         self, player: wavelink.Player, track: wavelink.Track, reason: str
     ):
         self.playing[player.guild.id] = False
+        print("Track ended " + str(self.playing))
         try:
             async with async_timeout.timeout(5):
                 await player.queue.get_wait()
         except asyncio.TimeoutError:
             self.skip_votes[player.guild.id] = []
-            await player.stop()
         try:
             binding = self.now_playing[player.guild.id]
 
@@ -143,7 +166,8 @@ class Music(commands.Cog):
             if loop == Type_Loop.SONG:
                 await player.play(track)
             elif loop == Type_Loop.QUEUE:
-                pass
+                if reason == "FINISHED": # ignore replace since skip command replace song
+                    await player.play(self.queue_loop[player.guild.id].next())
             else:
                 del self.bindings[player.guild.id][
                     self.bindings[player.guild.id].index(binding)
@@ -177,6 +201,9 @@ class Music(commands.Cog):
                 )
             )
             return False
+        elif int(os.getenv("DEBUG",0)) and ctx.author.id not in self.owners:
+            return False
+        return True
 
     @commands.hybrid_group()
     async def music(self, ctx: commands.Context):
@@ -272,14 +299,13 @@ class Music(commands.Cog):
     async def play(
         self,
         ctx: commands.Context,
-        query: str,
+        query: str = None,
         source: Enum_Source = Enum_Source.YouTube,
     ):
 
         """
-        Play a song
+        Play a song if query is none then it will play the last song in the queue
         """
-
         if ctx.author.voice and not ctx.voice_client:
             vc: wavelink.Player = await ctx.author.voice.channel.connect(
                 cls=wavelink.Player
@@ -296,7 +322,23 @@ class Music(commands.Cog):
                         color=discord.Color.red(),
                     )
                 )
-        vc.loop = Type_Loop.NONE
+        if not vc.__dict__.get("loop"):
+            vc.loop = Type_Loop.NONE
+        if not query: # none
+            # get last song in the queue
+            try:
+                async with async_timeout.timeout(1):
+                    har = await vc.queue.get_wait()
+            except asyncio.TimeoutError:
+                return await ctx.send(
+                    embed=discord.Embed(
+                        title="No song in queue",
+                        description="There is no song in the queue after waited for 1 second",
+                        color=discord.Color.red(),
+                    )
+                )
+            await vc.play(har)
+            return
         try:
             track = None
             if ctx.message.attachments:
@@ -414,7 +456,7 @@ class Music(commands.Cog):
 
                 await vc.play(
                     track[0]
-                ) if not vc.is_playing() or self.playing.get(ctx.guild.id, False) else await vc.queue.put_wait(track_)
+                ) if not self.playing.get(ctx.guild.id, False) else await vc.queue.put_wait(track_)
         else:
             try:
                 self.bindings[ctx.guild.id].append(
@@ -435,7 +477,7 @@ class Music(commands.Cog):
                     }
                 ]
 
-            await vc.play(track) if not vc.is_playing() or self.playing.get(ctx.guild.id, False) else await vc.queue.put_wait(
+            await vc.play(track) if not self.playing.get(ctx.guild.id, False) else await vc.queue.put_wait(
                 track
             )
             await ctx.send(
@@ -458,7 +500,7 @@ class Music(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
-        if not ctx.voice_client.is_playing() or self.playing.get(ctx.guild.id, False):
+        if self.playing.get(ctx.guild.id, False):
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
@@ -501,6 +543,8 @@ class Music(commands.Cog):
         vc.loop = Type_Loop.NONE
         await vc.stop()
         vc.queue.reset()
+        del self.bindings[ctx.guild.id]
+        del self.playing[ctx.guild.id]
         await ctx.send(
             embed=discord.Embed(
                 title="Stopped",
@@ -552,12 +596,24 @@ class Music(commands.Cog):
                     if not vc.loop == Type_Loop.QUEUE
                     else Type_Loop.NONE
                 )
+                self.queue_loop[ctx.guild.id] = Loop_Queue(
+                    self.now_playing[ctx.guild.id]["track"],
+                    *[track for track in vc.queue]
+                )
+                print([track for track in vc.queue])
             except AttributeError:
                 vc.loop = Type_Loop.QUEUE
-            return await ctx.send(
+                # copy all queues and current playing track to a new queue
+                self.queue_loop[ctx.guild.id] = Loop_Queue(
+                    self.now_playing[ctx.guild.id]["track"],
+                    *[track for track in vc.queue]
+                )
+                print([track for track in vc.queue])
+            await ctx.send(
                 embed=discord.Embed(
-                    title="Error",
-                    description="Looping the queue is not supported yet.",
+                    title=f"{'Turned on' if vc.loop == Type_Loop.QUEUE else 'Turned off'} loop",
+                    description=f"{'Turned on' if vc.loop == Type_Loop.QUEUE else 'Turned off'} loop for your queue.",
+                    color=discord.Color.green(),
                 )
             )
         elif type == Type_Loop.NONE:
@@ -675,7 +731,13 @@ class Music(commands.Cog):
                         color=discord.Color.yellow(),
                     )
                 )
-                await vc.stop()
+                # now be aware of queue looping so if we detects loop is queue then just call it's next function
+                if vc.loop == Type_Loop.QUEUE:
+                    await vc.play(vc.loop_queue.next())
+                elif vc.loop == Type_Loop.SONG:
+                    await vc.play(vc.track)
+                else:
+                    await vc.stop()
                 return
             if not next_:
                 return await ctx.send(
@@ -966,7 +1028,9 @@ class Music(commands.Cog):
                 )
             )
         vc: wavelink.Player = ctx.voice_client
-        queue = [x.title for x in vc.queue]
+        # now there's looping we should make list queue respond to looping
+        if vc.loop == Type_Loop.NONE:
+            queue = [x.title for x in vc.queue]
         if not queue:
             return await ctx.send(
                 embed=discord.Embed(
@@ -978,7 +1042,7 @@ class Music(commands.Cog):
         count = 1
         embed = discord.Embed(
             title="Queue",
-            description="There's currently {} songs in the queue.\nLimiting 50 queues".format(
+            description="There's currently {} songs in the queue.\nLimiting 50 queues to be shown on embed".format(
                 len(vc.queue)
             ),
             color=discord.Color.green(),

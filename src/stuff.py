@@ -51,6 +51,9 @@ class Stuff(
         self.owners = config.owners_id + list(self.bot.owner_ids)
         self.owners.append(self.bot.owner_id)
         self.owners = {int(id) for id in self.owners if not id is None}
+    
+    async def cog_check(self, ctx: commands.Context) -> bool:
+        return True
 
     @property
     def display_emoji(self) -> str:
