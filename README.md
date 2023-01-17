@@ -73,7 +73,10 @@ lavalink_is_https = True or False based on if you use https or not
 - [x] Live time update (Every Seconds)
 - [x] Skip votes
 - [ ] Filters
-- [ ] Loop queues
+- [x] Loop queues
 
 ## Recommendations
 1. Please use this [lavalink jar file](https://github.com/davidffa/lavalink) for better results or find node that use this
+
+## status
+Lavalinkable is now in stable status. Will work on issues that were posted
