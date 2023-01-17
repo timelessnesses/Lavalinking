@@ -270,15 +270,6 @@ class Music(commands.Cog):
         """
         Leave the voice channel
         """
-        if not ctx.author.guild_permissions.manage_guild:
-            await ctx.send(
-                embed=discord.Embed(
-                    title="No permission",
-                    description="You need the manage guild permission to use this command.",
-                    color=discord.Color.red(),
-                )
-            )
-            return
         await ctx.send(
             embed=discord.Embed(
                 title="Leaving",
