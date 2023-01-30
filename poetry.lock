@@ -748,14 +748,14 @@ files = [
 
 [[package]]
 name = "humanize"
-version = "4.4.0"
+version = "4.5.0"
 description = "Python humanize utilities"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "humanize-4.4.0-py3-none-any.whl", hash = "sha256:8830ebf2d65d0395c1bd4c79189ad71e023f277c2c7ae00f263124432e6f2ffa"},
-    {file = "humanize-4.4.0.tar.gz", hash = "sha256:efb2584565cc86b7ea87a977a15066de34cdedaf341b11c851cfcfd2b964779c"},
+    {file = "humanize-4.5.0-py3-none-any.whl", hash = "sha256:127e333677183070b82e90e0faef9440f9a16dab92143e52f4523afb08ca9290"},
+    {file = "humanize-4.5.0.tar.gz", hash = "sha256:d6ed00ed4dc59a66df71012e3d69cf655d7d21b02112d435871998969e8aedc8"},
 ]
 
 [package.extras]
@@ -1802,4 +1802,4 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "1433f88069e983b8bf4aa0cd0119f31e1a7f16d06d55f945c933d276f54ba73a"
+content-hash = "5e5eb89295676a286a3059fdfe976887f2768a2aa3b1802ccc358243f17460c0"
