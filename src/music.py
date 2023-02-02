@@ -300,7 +300,6 @@ class Music(commands.Cog):
         query: str = None,
         source: Enum_Source = Enum_Source.YouTube,
     ):
-
         """
         Play a song if query is none then it will play the last song in the queue
         """
@@ -1106,7 +1105,6 @@ class Music(commands.Cog):
 
     @music.command()
     async def remove(self, ctx: commands.Context, queue_index: int):
-
         vc: wavelink.Player = ctx.voice_client
         if not ctx.author.voice.channel:
             return await ctx.send(
