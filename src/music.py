@@ -316,7 +316,7 @@ class Music(commands.Cog):
                 return await ctx.send(
                     embed=discord.Embed(
                         title="Error",
-                        description="You must be in a voice channel to use this command.",
+                        description="You must be in a voice channel and same channel as the bot to use this command.",
                         color=discord.Color.red(),
                     )
                 )
@@ -490,11 +490,11 @@ class Music(commands.Cog):
         """
         Pause the music
         """
-        if not ctx.author.voice.channel:
+        if not ctx.author.voice or ctx.author.voice.channel.id != ctx.voice_client.channel.id:
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
-                    description="You must be in a voice channel to use this command.",
+                    description="You must be in a voice channel and same channel as the bot to use this command.",
                     color=discord.Color.red(),
                 )
             )
@@ -521,11 +521,11 @@ class Music(commands.Cog):
         """
         Stop the music
         """
-        if not ctx.author.voice.channel:
+        if not ctx.author.voice or ctx.author.voice.channel.id != ctx.voice_client.channel.id:
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
-                    description="You must be in a voice channel to use this command.",
+                    description="You must be in a voice channel and same channel as the bot to use this command.",
                     color=discord.Color.red(),
                 )
             )
@@ -559,11 +559,11 @@ class Music(commands.Cog):
         Loop the current song or entire queue (under development)
         """
 
-        if not ctx.author.voice.channel:
+        if not ctx.author.voice or ctx.author.voice.channel.id != ctx.voice_client.channel.id:
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
-                    description="You must be in a voice channel to use this command.",
+                    description="You must be in a voice channel and same channel as the bot to use this command.",
                     color=discord.Color.red(),
                 )
             )
@@ -640,11 +640,11 @@ class Music(commands.Cog):
         """
         Change the volume of the music (0-500)
         """
-        if not ctx.author.voice.channel:
+        if not ctx.author.voice or ctx.author.voice.channel.id != ctx.voice_client.channel.id:
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
-                    description="You must be in a voice channel to use this command.",
+                    description="You must be in a voice channel and same channel as the bot to use this command.",
                     color=discord.Color.red(),
                 )
             )
@@ -690,11 +690,11 @@ class Music(commands.Cog):
         """
         Skip the current song
         """
-        if not ctx.author.voice.channel:
+        if not ctx.author.voice or ctx.author.voice.channel.id != ctx.voice_client.channel.id:
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
-                    description="You must be in a voice channel to use this command.",
+                    description="You must be in a voice channel and same channel as the bot to use this command.",
                     color=discord.Color.red(),
                 )
             )
@@ -827,11 +827,11 @@ class Music(commands.Cog):
         """
         Get the current song
         """
-        if not ctx.author.voice.channel:
+        if not ctx.author.voice or ctx.author.voice.channel.id != ctx.voice_client.channel.id:
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
-                    description="You must be in a voice channel to use this command.",
+                    description="You must be in a voice channel and same channel as the bot to use this command.",
                     color=discord.Color.red(),
                 )
             )
@@ -869,7 +869,7 @@ class Music(commands.Cog):
                 return await ctx.send(
                     embed=discord.Embed(
                         title="Error",
-                        description="You must be in a voice channel to use this command.",
+                        description="You must be in a voice channel and same channel as the bot to use this command.",
                         color=discord.Color.red(),
                     )
                 )
@@ -1019,11 +1019,11 @@ class Music(commands.Cog):
 
     @music.command()
     async def queue(self, ctx: commands.Context):
-        if not ctx.author.voice.channel:
+        if not ctx.author.voice or ctx.author.voice.channel.id != ctx.voice_client.channel.id:
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
-                    description="You must be in a voice channel to use this command.",
+                    description="You must be in a voice channel and same channel as the bot to use this command.",
                     color=discord.Color.red(),
                 )
             )
@@ -1108,11 +1108,11 @@ class Music(commands.Cog):
     async def remove(self, ctx: commands.Context, queue_index: int):
 
         vc: wavelink.Player = ctx.voice_client
-        if not ctx.author.voice.channel:
+        if not ctx.author.voice or ctx.author.voice.channel.id != ctx.voice_client.channel.id:
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
-                    description="You must be in a voice channel to use this command.",
+                    description="You must be in a voice channel and same channel as the bot to use this command.",
                     color=discord.Color.red(),
                 )
             )
