@@ -1586,14 +1586,14 @@ watchmedo = ["PyYAML (>=3.10)"]
 
 [[package]]
 name = "wavelink"
-version = "1.3.4"
+version = "1.3.5"
 description = "A robust and powerful Lavalink wrapper for discord.py and derivatives."
 category = "main"
 optional = false
 python-versions = "*"
 files = [
-    {file = "wavelink-1.3.4-py3-none-any.whl", hash = "sha256:91a47681d6fdbab342753b52a49ea9f0470a10ef795d81709ed93f590c8fa853"},
-    {file = "wavelink-1.3.4.tar.gz", hash = "sha256:7040422c1b1552aa18a9c589d30d9d90a7c4e10ce7a2af2622177913eb21ca72"},
+    {file = "wavelink-1.3.5-py3-none-any.whl", hash = "sha256:2f83cf712cd1b12c3553bf33b3e8c98dd77cb1b725d3aef24245ee2a4608b5fe"},
+    {file = "wavelink-1.3.5.tar.gz", hash = "sha256:dcb0f828478a700e8c3a1098206dd6e66f4737a150c7b2eedd2f7c6f234794ef"},
 ]
 
 [package.dependencies]
@@ -1798,4 +1798,4 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "a6f013f25b60dcdcb0102b7de26e601061cf64d0c36e225e823955a900212f30"
+content-hash = "ae9357726a16c78c1dc7e8bdb3b0f5866f9cef876f3896eca41863082c72c966"
