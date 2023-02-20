@@ -7,7 +7,7 @@ authors = ["timelessnesses <mooping3roblox@gmail.com>"]
 [tool.poetry.dependencies]
 python = "^3.9"
 "discord.py" = {git = "https://github.com/Rapptz/discord.py"}
-aiohttp = {extras = ["speedups"], version = "^3.8.1"}
+aiohttp = {extras = ["speedups"], version = "^3.8.4"}
 Flask = "^2.1.2"
 orjson = "^3.8.5"
 python-dateutil = "^2.8.2"
