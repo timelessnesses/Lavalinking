@@ -5,7 +5,7 @@ description = ""
 authors = ["timelessnesses <mooping3roblox@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 "discord.py" = {git = "https://github.com/Rapptz/discord.py"}
 aiohttp = {extras = ["speedups"], version = "^3.8.4"}
 Flask = "^2.1.2"
