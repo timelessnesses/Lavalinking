@@ -10,12 +10,6 @@ from discord.ext import commands, tasks
 from discord.utils import get
 from discord_together import DiscordTogether
 from dotenv import load_dotenv
-
-try:
-    pass
-except ImportError:
-    pass
-
 from wavelink.ext import spotify
 
 from .utils.enums import Enum_Applications, Enum_Source, Type_Loop
@@ -42,7 +36,7 @@ class Alternative_Context:
 
 # basic implementation of loop queue
 class Loop_Queue:
-    def __init__(self, *tracks: wavelink.Track):
+    def __init__(self, *tracks: wavelink.Playable):
         self.tracks = tracks
         self.current = 0
         print(
@@ -68,7 +62,7 @@ class Music(commands.Cog):
         self.bindings: typing.Dict[int, typing.List[typing.Dict]] = {}
         self.skip_votes: typing.Dict[int, typing.List[discord.Member]] = {}
         self.now_playing: typing.Dict[int, typing.Dict] = {}
-        self.now_playing2: typing.Dict[int, wavelink.Track] = {}
+        self.now_playing2: typing.Dict[int, wavelink.Playable] = {}
         self.playing: typing.Dict[
             int, bool
         ] = {}  # guild and their playing status since wavelink is so unstable
@@ -81,13 +75,8 @@ class Music(commands.Cog):
                 client_id=config.spotify_client_id,
                 client_secret=config.spotify_client_secret,
             )
-        await wavelink.NodePool.create_node(
-            bot=self.bot,
-            host=config.lavalink_host,
-            port=int(config.lavalink_port),
-            password=config.lavalink_password,
-            spotify_client=client,
-        )
+        node = wavelink.Node(uri=config.uri,password=config.lavalink_password)
+        await wavelink.NodePool.connect(client=self.bot, nodes=[node], spotify=client)
         self.client = client
         self.together = await DiscordTogether(config.token)
 
@@ -102,7 +91,7 @@ class Music(commands.Cog):
 
     @commands.Cog.listener()
     async def on_wavelink_track_start(
-        self, player: wavelink.Player, track: wavelink.Track
+        self, player: wavelink.Player, track: wavelink.Playable
     ):
         self.playing[player.guild.id] = True
         print("Track started " + str(self.playing))
@@ -138,7 +127,7 @@ class Music(commands.Cog):
 
     @commands.Cog.listener()
     async def on_wavelink_track_end(
-        self, player: wavelink.Player, track: wavelink.Track, reason: str
+        self, player: wavelink.Player, track: wavelink.Playable, reason: str
     ):
         self.playing[player.guild.id] = False
         print("Track ended " + str(self.playing))
@@ -187,7 +176,7 @@ class Music(commands.Cog):
 
     async def loop_time_update(
         self,
-        track: wavelink.Track,
+        track: wavelink.Playable,
         msg: discord.Message,
         ctx: commands.Context,
         vc: wavelink.Player,
@@ -207,8 +196,6 @@ class Music(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
-            return False
-        elif int(os.getenv("DEBUG", 0)) and ctx.author.id not in self.owners:
             return False
         return True
 
@@ -357,7 +344,7 @@ class Music(commands.Cog):
                     track.append(
                         (
                             await wavelink.NodePool.get_node().get_tracks(
-                                wavelink.Track, attachment.url
+                                wavelink.Playable, attachment.url
                             )[0]
                         )
                     )
@@ -405,7 +392,7 @@ class Music(commands.Cog):
                 elif source == Enum_Source.YouTubePlaylist:
                     track = await wavelink.YouTubeTrack.search(query)
 
-        except wavelink.errors.LavalinkException as e:
+        except wavelink.LavalinkException as e:
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
@@ -912,7 +899,7 @@ class Music(commands.Cog):
                     track.append(
                         (
                             await wavelink.NodePool.get_node().get_tracks(
-                                wavelink.Track, attachment.url
+                                wavelink.Playable, attachment.url
                             )[0]
                         )
                     )
@@ -958,7 +945,7 @@ class Music(commands.Cog):
                 elif source == Enum_Source.YouTubePlaylist:
                     track = await wavelink.YouTubeTrack.search(query)
 
-        except wavelink.errors.LavalinkException as e:
+        except wavelink.LavalinkException as e:
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
@@ -1083,7 +1070,7 @@ class Music(commands.Cog):
         await ctx.send(embed=embed)
 
     async def info(
-        self, current_music: wavelink.Track, ctx: commands.Context, vc: wavelink.Player
+        self, current_music: wavelink.Playable, ctx: commands.Context, vc: wavelink.Player
     ):
         try:
             thumbnail = current_music.thumbnail

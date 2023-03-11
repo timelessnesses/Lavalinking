@@ -35,7 +35,7 @@ class Stuff(
                 await message.reply(
                     embed=discord.Embed(
                         title="Bot is currently in debug mode!",
-                        description="You will not be able to launch any command in debug mode right now! Please wait until bot is done debugging.",
+                        description="You will not be able to launch any command in debug mode right now! Please wait until bot is done debugging.\nSpecial case: https://github.com/timelessnesses/music-lavalink-bot/issues/44",
                         color=discord.Color.red(),
                     )
                 )
@@ -125,29 +125,8 @@ class Stuff(
         embed = discord.Embed(
             title=f"Node Status for {config.lavalink_host}",
         )
-        embed.add_field(name="Connected", value=node.is_connected())
-        embed.add_field(name="Connected to", value=config.lavalink_host)
-        embed.add_field(name="Lavalink's Server CPU Cores", value=node.stats.cpu_cores)
-        embed.add_field(
-            name="Lavalink's Uptime",
-            value=timedelta(milliseconds=round(node.stats.uptime, 2)),
-        )
-        embed.add_field(name="Lavalink's occupied players", value=node.stats.players)
-        embed.add_field(
-            name="Lavalink's playing players", value=node.stats.playing_players
-        )
-        embed.add_field(
-            name="Lavalink's Memory Free",
-            value=humanize.naturalsize(node.stats.memory_free, binary=True),
-        )
-        embed.add_field(
-            name="Lavalink's Memory Used",
-            value=humanize.naturalsize(node.stats.memory_used, binary=True),
-        )
-        embed.add_field(
-            name="Lavalink's Server load",
-            value=f"{round(node.stats.lavalink_load,3)* 100}%",
-        )
+        embed.add_field(name="Connection Status",value=node.status)
+        embed.add_field(name="Players count",value=len(node.players.keys()))
         await ctx.send(embed=embed)
 
 
