@@ -75,7 +75,7 @@ class Music(commands.Cog):
                 client_id=config.spotify_client_id,
                 client_secret=config.spotify_client_secret,
             )
-        node = wavelink.Node(uri=config.uri,password=config.lavalink_password)
+        node = wavelink.Node(uri=config.uri, password=config.lavalink_password)
         await wavelink.NodePool.connect(client=self.bot, nodes=[node], spotify=client)
         self.client = client
         self.together = await DiscordTogether(config.token)
@@ -197,8 +197,12 @@ class Music(commands.Cog):
                 )
             )
             return False
-        elif ctx.author.id not in self.bot.get_cpg('Stuffs').owners and int(os.getenv('DEBUG',0)):
-            await ctx.reply('The bot is currently in debugging mode. Bot will be available to the owner only. Thank you for understanding! For opening issue: https://github.com/timelessnesses/music-lavalink-bot/issues/44')
+        elif ctx.author.id not in self.bot.get_cpg("Stuffs").owners and int(
+            os.getenv("DEBUG", 0)
+        ):
+            await ctx.reply(
+                "The bot is currently in debugging mode. Bot will be available to the owner only. Thank you for understanding! For opening issue: https://github.com/timelessnesses/music-lavalink-bot/issues/44"
+            )
             return False
         return True
 
@@ -1073,7 +1077,10 @@ class Music(commands.Cog):
         await ctx.send(embed=embed)
 
     async def info(
-        self, current_music: wavelink.Playable, ctx: commands.Context, vc: wavelink.Player
+        self,
+        current_music: wavelink.Playable,
+        ctx: commands.Context,
+        vc: wavelink.Player,
     ):
         try:
             thumbnail = current_music.thumbnail

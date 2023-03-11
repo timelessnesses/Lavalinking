@@ -1,7 +1,7 @@
 import asyncio
 import platform
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import discord
 import psutil
@@ -10,7 +10,6 @@ from discord.ext import commands
 from . import utils
 
 sys.path.append("..")
-import humanize
 import wavelink
 from wavelink.ext import spotify
 
@@ -125,8 +124,8 @@ class Stuffs(
         embed = discord.Embed(
             title=f"Node Status for {config.lavalink_host}",
         )
-        embed.add_field(name="Connection Status",value=node.status)
-        embed.add_field(name="Players count",value=len(node.players.keys()))
+        embed.add_field(name="Connection Status", value=node.status)
+        embed.add_field(name="Players count", value=len(node.players.keys()))
         await ctx.send(embed=embed)
 
 
