@@ -17,7 +17,7 @@ from wavelink.ext import spotify
 from config import config
 
 
-class Stuff(
+class Stuffs(
     commands.Cog,
 ):
     """
@@ -131,4 +131,4 @@ class Stuff(
 
 
 async def setup(bot) -> None:
-    await bot.add_cog(Stuff(bot))
+    await bot.add_cog(Stuffs(bot))
