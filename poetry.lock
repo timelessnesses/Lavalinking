@@ -1339,14 +1339,14 @@ files = [
 
 [[package]]
 name = "platformdirs"
-version = "3.1.0"
+version = "3.1.1"
 description = "A small Python package for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
 category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "platformdirs-3.1.0-py3-none-any.whl", hash = "sha256:13b08a53ed71021350c9e300d4ea8668438fb0046ab3937ac9a29913a1a1350a"},
-    {file = "platformdirs-3.1.0.tar.gz", hash = "sha256:accc3665857288317f32c7bebb5a8e482ba717b474f3fc1d18ca7f9214be0cef"},
+    {file = "platformdirs-3.1.1-py3-none-any.whl", hash = "sha256:e5986afb596e4bb5bde29a79ac9061aa955b94fca2399b7aaac4090860920dd8"},
+    {file = "platformdirs-3.1.1.tar.gz", hash = "sha256:024996549ee88ec1a9aa99ff7f8fc819bb59e2c3477b410d90a16d32d6e707aa"},
 ]
 
 [package.extras]
@@ -1557,14 +1557,14 @@ six = ">=1.5"
 
 [[package]]
 name = "python-dotenv"
-version = "0.21.1"
+version = "1.0.0"
 description = "Read key-value pairs from a .env file and set them as environment variables"
 category = "main"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "python-dotenv-0.21.1.tar.gz", hash = "sha256:1c93de8f636cde3ce377292818d0e440b6e45a82f215c3744979151fa8151c49"},
-    {file = "python_dotenv-0.21.1-py3-none-any.whl", hash = "sha256:41e12e0318bebc859fcc4d97d4db8d20ad21721a6aa5047dd59f090391cb549a"},
+    {file = "python-dotenv-1.0.0.tar.gz", hash = "sha256:a8df96034aae6d2d50a4ebe8216326c61c3eb64836776504fcca410e5937a3ba"},
+    {file = "python_dotenv-1.0.0-py3-none-any.whl", hash = "sha256:f5971a9226b701070a4bf2c38c89e5a3f0d64de8debda981d1db98583009122a"},
 ]
 
 [package.extras]
@@ -1661,14 +1661,14 @@ watchmedo = ["PyYAML (>=3.10)"]
 
 [[package]]
 name = "wavelink"
-version = "2.0.1"
+version = "2.0.2"
 description = "A robust and powerful Lavalink wrapper for discord.py"
 category = "main"
 optional = false
 python-versions = ">=3.10"
 files = [
-    {file = "Wavelink-2.0.1-py3-none-any.whl", hash = "sha256:0bd49ba2bb99f7ce4b80a8ab6d0fed7b262d3fcfc9512c48a797da935777795c"},
-    {file = "Wavelink-2.0.1.tar.gz", hash = "sha256:ee7e84ae8c45ba1bad537854b9e2ce8b39f7cff1f7b7d852f2e12d4d657ce152"},
+    {file = "Wavelink-2.0.2-py3-none-any.whl", hash = "sha256:285e8ffb2d23448709335e6e77186fafb9d3d90b84b795d232ca2f8b3055317e"},
+    {file = "Wavelink-2.0.2.tar.gz", hash = "sha256:d35d302814e0a90aa7c5ad04ed7d82b8de4304d80d3605e50e902521076dbf48"},
 ]
 
 [package.dependencies]
@@ -1885,4 +1885,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "f4d3372c92d87b3898f7e38481018b798e2065958c391d4be7f983559a0d6bf4"
+content-hash = "7c39cbca3ffdf997b2d92bc6cc93c382f712c949f2b53498dcc39b76cfe7f40b"
