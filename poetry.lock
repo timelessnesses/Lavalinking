@@ -1661,14 +1661,14 @@ watchmedo = ["PyYAML (>=3.10)"]
 
 [[package]]
 name = "wavelink"
-version = "2.0.2"
+version = "2.0.3"
 description = "A robust and powerful Lavalink wrapper for discord.py"
 category = "main"
 optional = false
 python-versions = ">=3.10"
 files = [
-    {file = "Wavelink-2.0.2-py3-none-any.whl", hash = "sha256:285e8ffb2d23448709335e6e77186fafb9d3d90b84b795d232ca2f8b3055317e"},
-    {file = "Wavelink-2.0.2.tar.gz", hash = "sha256:d35d302814e0a90aa7c5ad04ed7d82b8de4304d80d3605e50e902521076dbf48"},
+    {file = "Wavelink-2.0.3-py3-none-any.whl", hash = "sha256:8071d511290dc8ac4ae44cd99b8ffc08e3abcab37e9a52b62d6d1edf42db6db0"},
+    {file = "Wavelink-2.0.3.tar.gz", hash = "sha256:aa73780701f22b78b9443505b480020dffbae653a40010cd60b6e5cb9e39ad98"},
 ]
 
 [package.dependencies]
@@ -1885,4 +1885,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "7c39cbca3ffdf997b2d92bc6cc93c382f712c949f2b53498dcc39b76cfe7f40b"
+content-hash = "47335767f8c920abe980fe10fa01d7c2a80e3af71adc5ec5d507f958d3c9d699"
