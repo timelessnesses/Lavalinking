@@ -451,7 +451,7 @@ class Music(commands.Cog):
                     delete_after=2,
                 )
 
-                await vc.play(track[0]) if not vc.is_playing() or self.playing.get(
+                await vc.play(track[0]) if not vc.is_playing() or not self.playing.get(
                     ctx.guild.id, False
                 ) else await vc.queue.put_wait(track_)
         else:
@@ -474,7 +474,7 @@ class Music(commands.Cog):
                     }
                 ]
 
-            await vc.play(track) if not vc.is_playing() or self.playing.get(
+            await vc.play(track) if not vc.is_playing() or not self.playing.get(
                 ctx.guild.id, False
             ) else await vc.queue.put_wait(track)
             await ctx.send(
@@ -1032,7 +1032,6 @@ class Music(commands.Cog):
                     color=discord.Color.green(),
                 )
             )
-        await vc.play(vc.queue[0]) if not vc.is_playing() else None
 
     @music.command()
     async def queue(self, ctx: commands.Context):
