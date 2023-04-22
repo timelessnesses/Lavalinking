@@ -326,26 +326,22 @@ class Music(commands.Cog):
             try:
                 async with async_timeout.timeout(1):
                     har = await vc.queue.get_wait()
+                    return await vc.play(har)
             except asyncio.TimeoutError:
-                return await ctx.send(
+                await ctx.send(
                     embed=discord.Embed(
                         title="No song in queue",
                         description="There is no song in the queue after waited for 1 second",
                         color=discord.Color.red(),
                     )
                 )
-            await vc.play(har)
-            return
         try:
             track = None
             if ctx.message.attachments:
                 track = []
                 count = 1
                 for attachment in ctx.message.attachments:
-                    if (
-                        not "audio" in attachment.content_type.split("/")[0]
-                        or not "video" in attachment.content_type.split("/")[0]
-                    ):
+                    if (False):
                         await ctx.send(
                             embed=discord.Embed(
                                 title="Error",
@@ -356,9 +352,9 @@ class Music(commands.Cog):
                     count += 1
                     track.append(
                         (
-                            await wavelink.NodePool.get_node().get_tracks(
+                            (await wavelink.NodePool.get_node().get_tracks(
                                 wavelink.Track, attachment.url
-                            )[0]
+                            ))[0]
                         )
                     )
             elif "youtube.com" in query and "watch" in query:  # youtube link
@@ -393,6 +389,12 @@ class Music(commands.Cog):
                 track = await wavelink.NodePool.get_node().get_tracks(
                     query=query, cls=wavelink.SoundCloudTrack
                 )
+            elif " " in query:
+                track = []
+                for a in query.split(" "):
+                    track.append((await wavelink.NodePool.get_node().get_tracks(
+                                wavelink.Track, a
+                            ))[0])
             else:
                 if source == Enum_Source.YouTube:
                     track = await wavelink.YouTubeTrack.search(query, return_first=True)
@@ -650,6 +652,7 @@ class Music(commands.Cog):
         """
         if (
             not ctx.author.voice
+            or not ctx.voice_client
             or ctx.author.voice.channel.id != ctx.voice_client.channel.id
         ):
             return await ctx.send(
@@ -869,7 +872,7 @@ class Music(commands.Cog):
     async def add(
         self,
         ctx: commands.Context,
-        query: str,
+        query: str=None,
         source: Enum_Source = Enum_Source.YouTube,
     ):
         """
@@ -897,10 +900,7 @@ class Music(commands.Cog):
                 track = []
                 count = 1
                 for attachment in ctx.message.attachments:
-                    if (
-                        not "audio" in attachment.content_type.split("/")[0]
-                        or not "video" in attachment.content_type.split("/")[0]
-                    ):
+                    if (False):
                         await ctx.send(
                             embed=discord.Embed(
                                 title="Error",
@@ -911,9 +911,9 @@ class Music(commands.Cog):
                     count += 1
                     track.append(
                         (
-                            await wavelink.NodePool.get_node().get_tracks(
+                            (await wavelink.NodePool.get_node().get_tracks(
                                 wavelink.Track, attachment.url
-                            )[0]
+                            ))[0]
                         )
                     )
             elif "youtube.com" in query and "watch" in query:  # youtube link
@@ -946,6 +946,12 @@ class Music(commands.Cog):
                 track = await wavelink.NodePool.get_node().get_tracks(
                     query=query, cls=wavelink.SoundCloudTrack
                 )
+            elif " " in query:
+                track = []
+                for a in query.split(" "):
+                    track.append((await wavelink.NodePool.get_node().get_tracks(
+                                wavelink.Track, a
+                            ))[0])
             else:
                 if source == Enum_Source.YouTube:
                     track = await wavelink.YouTubeTrack.search(query, return_first=True)
