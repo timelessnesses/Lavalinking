@@ -341,7 +341,7 @@ class Music(commands.Cog):
                 track = []
                 count = 1
                 for attachment in ctx.message.attachments:
-                    if (False):
+                    if False:
                         await ctx.send(
                             embed=discord.Embed(
                                 title="Error",
@@ -352,9 +352,11 @@ class Music(commands.Cog):
                     count += 1
                     track.append(
                         (
-                            (await wavelink.NodePool.get_node().get_tracks(
-                                wavelink.Track, attachment.url
-                            ))[0]
+                            (
+                                await wavelink.NodePool.get_node().get_tracks(
+                                    wavelink.Track, attachment.url
+                                )
+                            )[0]
                         )
                     )
             elif "youtube.com" in query and "watch" in query:  # youtube link
@@ -392,9 +394,13 @@ class Music(commands.Cog):
             elif " " in query:
                 track = []
                 for a in query.split(" "):
-                    track.append((await wavelink.NodePool.get_node().get_tracks(
+                    track.append(
+                        (
+                            await wavelink.NodePool.get_node().get_tracks(
                                 wavelink.Track, a
-                            ))[0])
+                            )
+                        )[0]
+                    )
             else:
                 if source == Enum_Source.YouTube:
                     track = await wavelink.YouTubeTrack.search(query, return_first=True)
@@ -872,7 +878,7 @@ class Music(commands.Cog):
     async def add(
         self,
         ctx: commands.Context,
-        query: str=None,
+        query: str = None,
         source: Enum_Source = Enum_Source.YouTube,
     ):
         """
@@ -900,7 +906,7 @@ class Music(commands.Cog):
                 track = []
                 count = 1
                 for attachment in ctx.message.attachments:
-                    if (False):
+                    if False:
                         await ctx.send(
                             embed=discord.Embed(
                                 title="Error",
@@ -911,9 +917,11 @@ class Music(commands.Cog):
                     count += 1
                     track.append(
                         (
-                            (await wavelink.NodePool.get_node().get_tracks(
-                                wavelink.Track, attachment.url
-                            ))[0]
+                            (
+                                await wavelink.NodePool.get_node().get_tracks(
+                                    wavelink.Track, attachment.url
+                                )
+                            )[0]
                         )
                     )
             elif "youtube.com" in query and "watch" in query:  # youtube link
@@ -949,9 +957,13 @@ class Music(commands.Cog):
             elif " " in query:
                 track = []
                 for a in query.split(" "):
-                    track.append((await wavelink.NodePool.get_node().get_tracks(
+                    track.append(
+                        (
+                            await wavelink.NodePool.get_node().get_tracks(
                                 wavelink.Track, a
-                            ))[0])
+                            )
+                        )[0]
+                    )
             else:
                 if source == Enum_Source.YouTube:
                     track = await wavelink.YouTubeTrack.search(query, return_first=True)
