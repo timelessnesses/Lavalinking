@@ -10,6 +10,7 @@ from discord.ext import commands, tasks
 from discord.utils import get
 from discord_together import DiscordTogether
 from dotenv import load_dotenv
+import yarl
 
 try:
     pass
@@ -293,6 +294,15 @@ class Music(commands.Cog):
                 )
             )
 
+    def is_url(self, url: str):
+        try:
+            x = yarl.URL(url)
+            assert x.host
+            assert x.scheme
+        except AssertionError:
+            return False
+        return True
+
     @music.command()
     async def play(
         self,
@@ -302,6 +312,9 @@ class Music(commands.Cog):
     ):
         """
         Play a song if query is none then it will play the last song in the queue
+        How query works:
+        If query is not an URL (or URLs separated by spaces) it will default to search on YouTube. You can change source to anything by supplying source argument.
+        If query is an URL the bot will detect the source automatically. (Supported Spotify, YouTube, SoundCloud, Direct Files (Audio only))
         """
         if ctx.author.voice and not ctx.voice_client:
             vc: wavelink.Player = await ctx.author.voice.channel.connect(
@@ -341,24 +354,22 @@ class Music(commands.Cog):
                 track = []
                 count = 1
                 for attachment in ctx.message.attachments:
-                    if False:
-                        await ctx.send(
-                            embed=discord.Embed(
-                                title="Error",
-                                description=f"Attachment number {count} has wrong content type.\nSkipping",
+                    count += 1
+                    try:
+                        track.append(
+                            (
+                                (
+                                    await wavelink.NodePool.get_node().get_tracks(
+                                        wavelink.Track, attachment.url
+                                    )
+                                )[0]
                             )
                         )
-                        continue
-                    count += 1
-                    track.append(
-                        (
-                            (
-                                await wavelink.NodePool.get_node().get_tracks(
-                                    wavelink.Track, attachment.url
-                                )
-                            )[0]
-                        )
-                    )
+                    except IndexError:
+                        await ctx.send(embed=discord.Embed(
+                            title=f"Failed to load {attachment.filename}",
+                            color=discord.Color.red()
+                        ))
             elif "youtube.com" in query and "watch" in query:  # youtube link
                 track = (
                     await wavelink.NodePool.get_node().get_tracks(
@@ -379,7 +390,7 @@ class Music(commands.Cog):
                 )[0]
             elif "youtube.com" in query and "list" in query:
                 track = await wavelink.NodePool.get_node().get_tracks(
-                    query, cls=wavelink.YouTubePlaylist
+                    cls=wavelink.YouTubePlaylist, query=query
                 )
             elif "soundcloud.com" in query and not "sets" in query:
                 track = (
@@ -391,7 +402,7 @@ class Music(commands.Cog):
                 track = await wavelink.NodePool.get_node().get_tracks(
                     query=query, cls=wavelink.SoundCloudTrack
                 )
-            elif " " in query:
+            elif self.is_url(query.split(" ")[0]):
                 track = []
                 for a in query.split(" "):
                     track.append(
