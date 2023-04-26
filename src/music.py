@@ -692,7 +692,7 @@ class Music(commands.Cog):
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
-                    description="The volume must be between 0 and 500.",
+                    description="The volume must be between 0 and 1000.",
                     color=discord.Color.red(),
                 )
             )
