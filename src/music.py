@@ -688,7 +688,7 @@ class Music(commands.Cog):
                     color=discord.Color.green(),
                 )
             )
-        if volume not in range(0, 500):
+        if volume not in range(0, 1000):
             return await ctx.send(
                 embed=discord.Embed(
                     title="Error",
