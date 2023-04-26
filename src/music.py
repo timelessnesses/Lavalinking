@@ -6,11 +6,11 @@ from datetime import timedelta
 import async_timeout
 import discord
 import wavelink
+import yarl
 from discord.ext import commands, tasks
 from discord.utils import get
 from discord_together import DiscordTogether
 from dotenv import load_dotenv
-import yarl
 
 try:
     pass
@@ -366,10 +366,12 @@ class Music(commands.Cog):
                             )
                         )
                     except IndexError:
-                        await ctx.send(embed=discord.Embed(
-                            title=f"Failed to load {attachment.filename}",
-                            color=discord.Color.red()
-                        ))
+                        await ctx.send(
+                            embed=discord.Embed(
+                                title=f"Failed to load {attachment.filename}",
+                                color=discord.Color.red(),
+                            )
+                        )
             elif "youtube.com" in query and "watch" in query:  # youtube link
                 track = (
                     await wavelink.NodePool.get_node().get_tracks(
