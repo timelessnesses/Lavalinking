@@ -679,17 +679,6 @@ class Music(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
-
-        if not ctx.voice_client.is_playing() and not self.playing.get(
-            ctx.guild.id, False
-        ):
-            return await ctx.send(
-                embed=discord.Embed(
-                    title="Error",
-                    description="There is no song currently playing.",
-                    color=discord.Color.red(),
-                )
-            )
         vc: wavelink.Player = ctx.voice_client
         if volume is None:
             return await ctx.send(
