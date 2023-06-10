@@ -11,7 +11,7 @@ This bot is designed to be stateless music bot (no database, no cache, no persis
 
 - Python 3.8 or higher
 - poetry (`pip install poetry`)
-- A lavalink server (either locally host it or find one [here](https://lavalink.darrennathanael.com/) or if you are lazy go ahead use `lavalink.timelessnesses.me` with port of 80 and password `youshallnotpass` and it's not ssl)
+- A lavalink server (either locally host it or find one [here](https://lavalink.darrennathanael.com/) or if you are lazy go ahead use `lavalink.api.timelessnesses.me` with port of 80 and password `youshallnotpass` and it's not ssl)
 
 #### Procedure
 
