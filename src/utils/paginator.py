@@ -184,7 +184,7 @@ class Pages(discord.ui.View):
     async def start(self) -> None:
         if (
             self.check_embeds
-            and not self.ctx.channel.permissions_for(self.ctx.me).embed_links # type: ignore
+            and not self.ctx.channel.permissions_for(self.ctx.me).embed_links  # type: ignore
         ):
             await self.ctx.send(
                 "Bot does not have embed links permission in this channel."
@@ -201,7 +201,7 @@ class Pages(discord.ui.View):
 
         self.message = await self.ctx.send(**kwargs, view=self)
 
-    @discord.ui.button(label="≪", style=discord.ButtonStyle.grey) # type: ignore
+    @discord.ui.button(label="≪", style=discord.ButtonStyle.grey)  # type: ignore
     async def go_to_first_page(
         self, button: discord.ui.Button, interaction: discord.Interaction
     ):
@@ -209,7 +209,7 @@ class Pages(discord.ui.View):
 
         await self.show_page(interaction, 0)
 
-    @discord.ui.button(label="Back", style=discord.ButtonStyle.blurple) # type: ignore
+    @discord.ui.button(label="Back", style=discord.ButtonStyle.blurple)  # type: ignore
     async def go_to_previous_page(
         self, button: discord.ui.Button, interaction: discord.Interaction
     ):
@@ -217,13 +217,13 @@ class Pages(discord.ui.View):
 
         await self.show_checked_page(interaction, self.current_page - 1)
 
-    @discord.ui.button(label="Current", style=discord.ButtonStyle.grey, disabled=True) # type: ignore
+    @discord.ui.button(label="Current", style=discord.ButtonStyle.grey, disabled=True)  # type: ignore
     async def go_to_current_page(
         self, button: discord.ui.Button, interaction: discord.Interaction
     ):
         pass
 
-    @discord.ui.button(label="Next", style=discord.ButtonStyle.blurple) # type: ignore
+    @discord.ui.button(label="Next", style=discord.ButtonStyle.blurple)  # type: ignore
     async def go_to_next_page(
         self, button: discord.ui.Button, interaction: discord.Interaction
     ):
@@ -231,7 +231,7 @@ class Pages(discord.ui.View):
 
         await self.show_checked_page(interaction, self.current_page + 1)
 
-    @discord.ui.button(label="≫", style=discord.ButtonStyle.grey) # type: ignore
+    @discord.ui.button(label="≫", style=discord.ButtonStyle.grey)  # type: ignore
     async def go_to_last_page(
         self, button: discord.ui.Button, interaction: discord.Interaction
     ):
@@ -241,7 +241,7 @@ class Pages(discord.ui.View):
 
         await self.show_page(interaction, self.source.get_max_pages() - 1)
 
-    @discord.ui.button(label="Skip to page...", style=discord.ButtonStyle.grey) # type: ignore
+    @discord.ui.button(label="Skip to page...", style=discord.ButtonStyle.grey)  # type: ignore
     async def numbered_page(
         self, button: discord.ui.Button, interaction: discord.Interaction
     ):
@@ -289,7 +289,7 @@ class Pages(discord.ui.View):
 
                 await self.show_checked_page(interaction, page - 1)
 
-    @discord.ui.button(label="Quit", style=discord.ButtonStyle.red) # type: ignore
+    @discord.ui.button(label="Quit", style=discord.ButtonStyle.red)  # type: ignore
     async def stop_pages(
         self, button: discord.ui.Button, interaction: discord.Interaction
     ):
