@@ -22,7 +22,7 @@ logging.basicConfig(
     datefmt="%Y/%m/%d %H:%M:%S",
 )
 
-log = logging.getLogger("")
+log = logging.getLogger("lavalinking.bot")
 log.setLevel(logging.NOTSET)
 
 try:
