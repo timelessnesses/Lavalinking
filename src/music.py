@@ -8,9 +8,9 @@ from discord.ext.commands.context import Context
 import wavelink
 import wavelink.ext.spotify
 from discord.ext import commands
-
+import wavelink
+import typing
 from config import config
-
 
 class Music(commands.Cog):
     node: wavelink.Node

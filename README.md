@@ -1,4 +1,4 @@
-# Music bot with lavalink
+# Lavalinking (REWRITE)
 
 A easy/configurable/lots of features for your need!  
 This bot is designed to be stateless music bot (no database, no cache, no persistent data) so no needs for a database!
