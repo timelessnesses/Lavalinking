@@ -1,7 +1,7 @@
 import asyncio
 import platform
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import discord
 import psutil
@@ -10,9 +10,7 @@ from discord.ext import commands
 from . import utils
 
 sys.path.append("..")
-import humanize
 import wavelink
-from wavelink.ext import spotify
 
 from config import config
 
@@ -59,7 +57,7 @@ class Stuff(
     def display_emoji(self) -> str:
         return "💭"
 
-    @commands.hybrid_command(name="credits", aliases=["c"]) # type: ignore
+    @commands.hybrid_command(name="credits", aliases=["c"])  # type: ignore
     async def credits(self, ctx: commands.Context) -> None:
         """
         Shows the credits.
@@ -78,7 +76,7 @@ class Stuff(
 
         await ctx.send(embed=embed)
 
-    @commands.hybrid_command(name="ping", aliases=["p"]) # type: ignore
+    @commands.hybrid_command(name="ping", aliases=["p"])  # type: ignore
     async def ping(self, ctx):
         """
         Pong!
@@ -90,7 +88,7 @@ class Stuff(
         )
         await ctx.send(embed=embed)
 
-    @commands.hybrid_command(name="status") # type: ignore
+    @commands.hybrid_command(name="status")  # type: ignore
     async def status(self, ctx) -> None:
         """
         Status of bot like uptime, memory usage, etc.
@@ -110,7 +108,7 @@ class Stuff(
         embed.add_field(name="Bot version", value=f"{self.bot.version_}")
         await ctx.send(embed=embed)
 
-    @commands.hybrid_command(name="node_stats") # type: ignore
+    @commands.hybrid_command(name="node_stats")  # type: ignore
     async def node_stats(self, ctx) -> None:
         """
         Shows the lavalink stats.
@@ -119,7 +117,9 @@ class Stuff(
         embed = discord.Embed(
             title=f"Node Status for {config.lavalink_host}",
         )
-        embed.add_field(name="Connected", value=node.status == wavelink.NodeStatus.CONNECTED)
+        embed.add_field(
+            name="Connected", value=node.status == wavelink.NodeStatus.CONNECTED
+        )
         embed.add_field(name="Lavalink host", value=config.lavalink_host)
         await ctx.send(embed=embed)
 

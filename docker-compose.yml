@@ -1,0 +1,20 @@
+services:
+  bot:
+    build: .
+    env_file:
+      - .env
+    environment:
+      - MUSIC_LAVALINK_HOST=lavalink
+      - MUSIC_LAVALINK_PORT=2333
+      - MUSIC_LAVALINK_HTTPS=0
+    restart: unless-stopped
+  lavalink:
+    image: "ghcr.io/lavalink-devs/lavalink:3-alpine"
+    restart: unless-stopped
+    expose:
+      - 2333
+    volumes:
+      - ./bin/application.yml:/opt/Lavalink/application.yml
+    environment:
+      - LAVALINK_SERVER_PASSWORD=youshallnotpass
+      - SERVER_PORT=2333
