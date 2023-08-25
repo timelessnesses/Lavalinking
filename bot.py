@@ -1,3 +1,5 @@
+import argparse
+import typing
 from time import perf_counter as pc
 
 import discord
@@ -5,8 +7,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from watchdog.observers import Observer
-import typing
-import argparse
+
 load_dotenv()
 import asyncio
 import datetime
@@ -63,9 +64,11 @@ observer = Observer()
 
 "https://github.com/gorakhargosh/watchdog/issues/1003#issuecomment-1689069256"
 
+
 class _LastEvent(typing.TypedDict):
     time: float
     event: FileSystemEvent | None
+
 
 class _DuplicateEventLimiter:
     """Duplicate event limiter.
@@ -198,11 +201,19 @@ async def main():
     except KeyboardInterrupt:
         log.info("Exiting...")
 
+
 def starter() -> typing.NoReturn:
     args = argparse.ArgumentParser(description="A music bot with a lavalink support.")
 
-    args.add_argument("-d", "--debug", action="store_true", help="Debug mode. (Sensitive data!)")
-    args.add_argument("-r", "--reloader", action="store_true", help="File reloader. (For development/Quick reloading without jishaku reload module.)")
+    args.add_argument(
+        "-d", "--debug", action="store_true", help="Debug mode. (Sensitive data!)"
+    )
+    args.add_argument(
+        "-r",
+        "--reloader",
+        action="store_true",
+        help="File reloader. (For development/Quick reloading without jishaku reload module.)",
+    )
 
     parsed = args.parse_args()
     reloader = False
@@ -218,7 +229,7 @@ def starter() -> typing.NoReturn:
         log.info("Started file watcher. (0.5 seconds ratelimiting.)")
     try:
         asyncio.run(main())
-    except (Exception) as e:
+    except Exception as e:
         logging.error("An unhandled error has occured. (%s)", e.__class__.__name__)
         logging.error("%s", "".join(traceback.format_exception(e)))
         observer.stop() if reloader else None
@@ -232,6 +243,7 @@ def starter() -> typing.NoReturn:
         observer.stop() if reloader else None
         logging.info("Exiting gracefully.")
         exit(0)
+
 
 if __name__ == "__main__":
     starter()
