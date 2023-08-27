@@ -1,6 +1,5 @@
 import logging
 import typing
-import regex
 
 import discord
 import wavelink
@@ -9,10 +8,22 @@ from discord.ext import commands
 
 from config import config
 
-from .utils.types import Sources
+from .utils.regexes import detect_source, detect_url
+from .utils.types import Sources, SpotifyTrackTypes
+
+Playables = typing.TypeVar(
+    "Playables",
+    wavelink.YouTubeTrack,
+    wavelink.YouTubePlaylist,
+    wavelink.SoundCloudTrack,
+    wavelink.SoundCloudPlaylist,
+    wavelink.GenericTrack,
+    wavelink.ext.spotify.SpotifyTrack,
+)
 
 
 class Music(commands.Cog):
+    # stuffs
     node: wavelink.Node
     sc: wavelink.ext.spotify.SpotifyClient
     bot: commands.Bot
@@ -24,6 +35,7 @@ class Music(commands.Cog):
         self.logger = logging.getLogger("lavalinking.src.music")
         self.bot.loop.create_task(self.connect())
         self.connected = False
+        self.bind_ctx: dict[discord.Guild, wavelink.Player] = {}
 
     async def connect(self) -> None:
         if self.connected:
@@ -66,6 +78,16 @@ class Music(commands.Cog):
             typing.Union[discord.VoiceChannel, discord.StageChannel]
         ] = None,
     ) -> typing.Optional[wavelink.Player]:
+        """
+        Make the bot join to the specified voice channel (supply channel argument is required if you are not in any voice chat in this server.)
+
+        [Arguments]
+            channel: Optional[Voice channel, Stage Channel] - Channel that you want bot to join. (Defaults to user's current voice chat channel. If user did not join the voice chat then it will use this argument.)
+
+        [Possible Exceptions]
+            Voice chat argument required. - Will raise this error when the user did not join any voice chat channel and the `channel` argument is empty.
+        """
+
         try:
             channel = channel or ctx.author.voice.channel  # type: ignore[union-attr]
         except AttributeError:
@@ -76,25 +98,89 @@ class Music(commands.Cog):
         return vc
 
     async def get_vc(self, ctx: commands.Context) -> wavelink.Player:
+        """
+        Get voice chat.
+        """
+
         vc: typing.Optional[wavelink.Player] = None
 
         if ctx.voice_client:
             vc: wavelink.Player = ctx.voice_client
-        elif wavelink.NodePool.get_connected_node().get_player(ctx.guild.id): # type: ignore[union-attr]
+        elif wavelink.NodePool.get_connected_node().get_player(ctx.guild.id):  # type: ignore[union-attr]
             vc: wavelink.Player = wavelink.NodePool.get_connected_node().get_player(
-                ctx.guild.id # type: ignore[union-attr]
+                ctx.guild.id  # type: ignore[union-attr]
             )
         else:
             vc: wavelink.Player = await self.join(ctx)
 
         return vc
 
+    async def get_track(
+        self,
+        source: wavelink.Playable | wavelink.Playlist | SpotifyTrackTypes,
+        query: str,
+    ) -> wavelink.Playable:
+        """
+        Get a track based on the source.
+        """
+
+        node = wavelink.NodePool.get_connected_node()
+        match source:
+            case wavelink.YouTubeTrack:
+                return (await node.get_tracks(wavelink.YouTubeTrack, query))[0]
+            case wavelink.YouTubePlaylist:
+                return await node.get_playlist(wavelink.YouTubePlaylist, query)
+            case SpotifyTrackTypes.track:
+                return (await wavelink.ext.spotify.SpotifyTrack.search(query))[0]
+            case SpotifyTrackTypes.playlist:
+                return await wavelink.ext.spotify.SpotifyTrack.search(query)
+            case wavelink.SoundCloudTrack:
+                return (await node.get_tracks(wavelink.SoundCloudTrack, query))[0]
+            case wavelink.SoundCloudPlaylist:
+                return await node.get_playlist(wavelink.SoundCloudPlaylist, query)
+            case wavelink.GenericTrack:
+                return (await node.get_tracks(wavelink.GenericTrack, query))[0]
+            case _:
+                raise ValueError("Track type is not supported: {}".format(source))
+
+    async def search_tracks(self, source: Playables, query: str) -> list[Playables]:
+        return [wavelink.GenericTrack]
+
+    def convert_source(
+        self, source: Sources, playlist: bool
+    ) -> wavelink.Playable | wavelink.Playlist | wavelink.ext.spotify.SpotifyTrack:
+        match source, playlist:
+            case "YouTube", False:
+                return wavelink.YouTubeTrack
+            case "YouTube", True:
+                return wavelink.YouTubePlaylist
+            case "Spotify", _:
+                return wavelink.ext.spotify.SpotifyTrack
+            case "SoundCloud", False:
+                return wavelink.SoundCloudTrack
+            case "SoundCloud", True:
+                return wavelink.SoundCloudPlaylist
+            case _, _:
+                raise ValueError("Invalid source string: {}".format(source))
+        raise ValueError(
+            "Invalid source string: {}".format(source)
+        )  # mypy doesn't know the default will raise error.
+
     @commands.hybrid_command()  # type: ignore
     async def play(
-        self, ctx: commands.Context, query: str, source: Sources = "YouTube"
+        self,
+        ctx: commands.Context,
+        query: str,
+        source: Sources = "YouTube",
+        playlist: bool = False,
+        autoadd: bool = False,
     ) -> None:
         vc = await self.get_vc(ctx)
-        
+        if detect_url(query):
+            source = detect_source(query)  # type: ignore[assignment]
+            await self.play_song(vc, source)
+            return
+        await self.search_tracks(wavelink.YouTubeTrack, query)
 
     @commands.hybrid_command()  # type: ignore
     async def volume(
