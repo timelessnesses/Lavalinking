@@ -179,8 +179,13 @@ class Music(commands.Cog):
         return (await source.search(url))[0] # type: ignore
 
     def build_selection_tracks(self, tracks: list[wavelink.Playable]) -> discord.Embed:
-        embed = discord.Embed(title="")
-        for track in tracks
+        embed = discord.Embed(title="Tracks (Limited to 10)")
+        for no, track in enumerate(tracks[:25], 1):
+            embed.add_field(name=f"{no}. {track.author}",value=track.title, inline=True)
+        return embed
+    
+    def generate_success_embed(self, title: str) -> discord.Embed:
+        return discord.Embed(title=title,color=discord.Color.green())
 
     @commands.hybrid_command()  # type: ignore
     async def play(
@@ -196,8 +201,17 @@ class Music(commands.Cog):
             source = detect_source(query)  # type: ignore[assignment]
             await self.play_song(vc, (await self.get_song_by_url(source, query))) # type: ignore
             return
-        tracks = await self.search_tracks(self.convert_source(source, playlist), query) # type: ignore
-
+        tracks = (await self.search_tracks(self.convert_source(source, playlist), query))[:25] # type: ignore
+        await ctx.reply(embed=self.build_selection_tracks(tracks))
+        try:
+            track: wavelink.Playable = tracks[int((await self.bot.wait_for("message", check= lambda x: x.author == ctx.author)).content) - 1]
+        except ValueError:
+            await ctx.reply(embed=self.generate_error("Invalid index! Exiting"))
+        except IndexError:
+            await ctx.reply(embed=self.generate_error("Out of index bound! Exiting"))
+        else:
+            await self.play_song(vc, track)
+            await ctx.reply(embed=self.generate_success_embed(f"Successfully added {str(track)}"))
 
 
     async def play_song(self,vc: wavelink.Player, track: Playables) -> None:
@@ -205,6 +219,33 @@ class Music(commands.Cog):
             await vc.queue.put_wait(track) # type: ignore
             return
         await vc.play(track) # type: ignore
+
+    @commands.command() # type: ignore
+    async def pause(self, ctx: commands.Context, force: typing.Optional[bool] = None) -> None:
+        vc = await self.get_vc(ctx)
+        if force is not None:
+            match force, vc.is_paused():
+                case False, False:
+                    await ctx.reply(embed=self.generate_error("Already playing!"))
+                    await vc.pause()
+                    return
+                case False, True:
+                    await ctx.reply(embed=self.generate_success_embed("Resuming!"))
+                    await vc.pause()
+                    return
+                case True, True:
+                    await ctx.reply(embed=self.generate_error("Already paused!"))
+                    return
+                case True, False:
+                    await ctx.reply(embed=self.generate_success_embed("Pausing!"))
+                    await vc.pause()
+                    return
+        await vc.pause()
+        await ctx.reply(embed=self.generate_success_embed(f"Successfully {'paused' if vc.is_paused() else 'resumed'}."))
+
+    @commands.command()
+    async def stop(self, ctx: commands.Context) -> None:
+        pass
 
     @commands.hybrid_command()  # type: ignore
     async def volume(
