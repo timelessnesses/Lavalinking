@@ -13,12 +13,20 @@ from .utils.types import Sources, SpotifyTrackTypes
 
 Playables = typing.TypeVar(
     "Playables",
+    type[wavelink.YouTubeTrack],
+    type[wavelink.YouTubePlaylist],
+    type[wavelink.SoundCloudTrack],
+    type[wavelink.SoundCloudPlaylist],
+    type[wavelink.GenericTrack],
+    type[wavelink.ext.spotify.SpotifyTrack],
+    type[wavelink.Playable],
     wavelink.YouTubeTrack,
     wavelink.YouTubePlaylist,
     wavelink.SoundCloudTrack,
     wavelink.SoundCloudPlaylist,
     wavelink.GenericTrack,
     wavelink.ext.spotify.SpotifyTrack,
+    wavelink.Playable,
 )
 
 
@@ -102,16 +110,16 @@ class Music(commands.Cog):
         Get voice chat.
         """
 
-        vc: typing.Optional[wavelink.Player] = None
+        vc: typing.Optional[wavelink.Player] = None # type: ignore
 
         if ctx.voice_client:
-            vc: wavelink.Player = ctx.voice_client
+            vc: wavelink.Player = ctx.voice_client # type: ignore
         elif wavelink.NodePool.get_connected_node().get_player(ctx.guild.id):  # type: ignore[union-attr]
             vc: wavelink.Player = wavelink.NodePool.get_connected_node().get_player(
                 ctx.guild.id  # type: ignore[union-attr]
             )
         else:
-            vc: wavelink.Player = await self.join(ctx)
+            vc: wavelink.Player = await self.join(ctx) # type: ignore
 
         return vc
 
@@ -119,7 +127,7 @@ class Music(commands.Cog):
         self,
         source: wavelink.Playable | wavelink.Playlist | SpotifyTrackTypes,
         query: str,
-    ) -> wavelink.Playable:
+    ) -> wavelink.Playable | list[wavelink.Playable] | None:
         """
         Get a track based on the source.
         """
@@ -129,42 +137,50 @@ class Music(commands.Cog):
             case wavelink.YouTubeTrack:
                 return (await node.get_tracks(wavelink.YouTubeTrack, query))[0]
             case wavelink.YouTubePlaylist:
-                return await node.get_playlist(wavelink.YouTubePlaylist, query)
+                return await node.get_playlist(wavelink.YouTubePlaylist, query) # type: ignore
             case SpotifyTrackTypes.track:
-                return (await wavelink.ext.spotify.SpotifyTrack.search(query))[0]
+                return (await wavelink.ext.spotify.SpotifyTrack.search(query))[0] # type: ignore
             case SpotifyTrackTypes.playlist:
-                return await wavelink.ext.spotify.SpotifyTrack.search(query)
+                return await wavelink.ext.spotify.SpotifyTrack.search(query) # type: ignore
             case wavelink.SoundCloudTrack:
                 return (await node.get_tracks(wavelink.SoundCloudTrack, query))[0]
             case wavelink.SoundCloudPlaylist:
-                return await node.get_playlist(wavelink.SoundCloudPlaylist, query)
+                return await node.get_playlist(wavelink.SoundCloudPlaylist, query) # type: ignore
             case wavelink.GenericTrack:
                 return (await node.get_tracks(wavelink.GenericTrack, query))[0]
             case _:
                 raise ValueError("Track type is not supported: {}".format(source))
 
-    async def search_tracks(self, source: Playables, query: str) -> list[Playables]:
-        return [wavelink.GenericTrack]
+    async def search_tracks(self, source: Playables, query: str) -> list[type[Playables]]:
+        node = wavelink.NodePool.get_connected_node()
+        return await source.search(query, node=node) # type: ignore
 
     def convert_source(
         self, source: Sources, playlist: bool
-    ) -> wavelink.Playable | wavelink.Playlist | wavelink.ext.spotify.SpotifyTrack:
+    ) -> wavelink.Playable | wavelink.Playlist | wavelink.ext.spotify.SpotifyTrack | wavelink.GenericTrack:
         match source, playlist:
             case "YouTube", False:
-                return wavelink.YouTubeTrack
+                return wavelink.YouTubeTrack # type: ignore
             case "YouTube", True:
-                return wavelink.YouTubePlaylist
+                return wavelink.YouTubePlaylist # type: ignore
             case "Spotify", _:
-                return wavelink.ext.spotify.SpotifyTrack
+                return wavelink.ext.spotify.SpotifyTrack # type: ignore
             case "SoundCloud", False:
-                return wavelink.SoundCloudTrack
+                return wavelink.SoundCloudTrack # type: ignore
             case "SoundCloud", True:
-                return wavelink.SoundCloudPlaylist
+                return wavelink.SoundCloudPlaylist # type: ignore
             case _, _:
                 raise ValueError("Invalid source string: {}".format(source))
         raise ValueError(
             "Invalid source string: {}".format(source)
         )  # mypy doesn't know the default will raise error.
+
+    async def get_song_by_url(self, source: Playables, url: str) -> type[Playables]:
+        return (await source.search(url))[0] # type: ignore
+
+    def build_selection_tracks(self, tracks: list[wavelink.Playable]) -> discord.Embed:
+        embed = discord.Embed(title="")
+        for track in tracks
 
     @commands.hybrid_command()  # type: ignore
     async def play(
@@ -178,9 +194,17 @@ class Music(commands.Cog):
         vc = await self.get_vc(ctx)
         if detect_url(query):
             source = detect_source(query)  # type: ignore[assignment]
-            await self.play_song(vc, source)
+            await self.play_song(vc, (await self.get_song_by_url(source, query))) # type: ignore
             return
-        await self.search_tracks(wavelink.YouTubeTrack, query)
+        tracks = await self.search_tracks(self.convert_source(source, playlist), query) # type: ignore
+
+
+
+    async def play_song(self,vc: wavelink.Player, track: Playables) -> None:
+        if vc.is_playing():
+            await vc.queue.put_wait(track) # type: ignore
+            return
+        await vc.play(track) # type: ignore
 
     @commands.hybrid_command()  # type: ignore
     async def volume(
