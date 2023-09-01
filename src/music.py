@@ -110,16 +110,16 @@ class Music(commands.Cog):
         Get voice chat.
         """
 
-        vc: typing.Optional[wavelink.Player] = None # type: ignore
+        vc: typing.Optional[wavelink.Player] = None  # type: ignore
 
         if ctx.voice_client:
-            vc: wavelink.Player = ctx.voice_client # type: ignore
+            vc: wavelink.Player = ctx.voice_client  # type: ignore
         elif wavelink.NodePool.get_connected_node().get_player(ctx.guild.id):  # type: ignore[union-attr]
             vc: wavelink.Player = wavelink.NodePool.get_connected_node().get_player(
                 ctx.guild.id  # type: ignore[union-attr]
             )
         else:
-            vc: wavelink.Player = await self.join(ctx) # type: ignore
+            vc: wavelink.Player = await self.join(ctx)  # type: ignore
 
         return vc
 
@@ -137,38 +137,45 @@ class Music(commands.Cog):
             case wavelink.YouTubeTrack:
                 return (await node.get_tracks(wavelink.YouTubeTrack, query))[0]
             case wavelink.YouTubePlaylist:
-                return await node.get_playlist(wavelink.YouTubePlaylist, query) # type: ignore
+                return await node.get_playlist(wavelink.YouTubePlaylist, query)  # type: ignore
             case SpotifyTrackTypes.track:
-                return (await wavelink.ext.spotify.SpotifyTrack.search(query))[0] # type: ignore
+                return (await wavelink.ext.spotify.SpotifyTrack.search(query))[0]  # type: ignore
             case SpotifyTrackTypes.playlist:
-                return await wavelink.ext.spotify.SpotifyTrack.search(query) # type: ignore
+                return await wavelink.ext.spotify.SpotifyTrack.search(query)  # type: ignore
             case wavelink.SoundCloudTrack:
                 return (await node.get_tracks(wavelink.SoundCloudTrack, query))[0]
             case wavelink.SoundCloudPlaylist:
-                return await node.get_playlist(wavelink.SoundCloudPlaylist, query) # type: ignore
+                return await node.get_playlist(wavelink.SoundCloudPlaylist, query)  # type: ignore
             case wavelink.GenericTrack:
                 return (await node.get_tracks(wavelink.GenericTrack, query))[0]
             case _:
                 raise ValueError("Track type is not supported: {}".format(source))
 
-    async def search_tracks(self, source: Playables, query: str) -> list[type[Playables]]:
+    async def search_tracks(
+        self, source: Playables, query: str
+    ) -> list[type[Playables]]:
         node = wavelink.NodePool.get_connected_node()
-        return await source.search(query, node=node) # type: ignore
+        return await source.search(query, node=node)  # type: ignore
 
     def convert_source(
         self, source: Sources, playlist: bool
-    ) -> wavelink.Playable | wavelink.Playlist | wavelink.ext.spotify.SpotifyTrack | wavelink.GenericTrack:
+    ) -> (
+        wavelink.Playable
+        | wavelink.Playlist
+        | wavelink.ext.spotify.SpotifyTrack
+        | wavelink.GenericTrack
+    ):
         match source, playlist:
             case "YouTube", False:
-                return wavelink.YouTubeTrack # type: ignore
+                return wavelink.YouTubeTrack  # type: ignore
             case "YouTube", True:
-                return wavelink.YouTubePlaylist # type: ignore
+                return wavelink.YouTubePlaylist  # type: ignore
             case "Spotify", _:
-                return wavelink.ext.spotify.SpotifyTrack # type: ignore
+                return wavelink.ext.spotify.SpotifyTrack  # type: ignore
             case "SoundCloud", False:
-                return wavelink.SoundCloudTrack # type: ignore
+                return wavelink.SoundCloudTrack  # type: ignore
             case "SoundCloud", True:
-                return wavelink.SoundCloudPlaylist # type: ignore
+                return wavelink.SoundCloudPlaylist  # type: ignore
             case _, _:
                 raise ValueError("Invalid source string: {}".format(source))
         raise ValueError(
@@ -176,16 +183,18 @@ class Music(commands.Cog):
         )  # mypy doesn't know the default will raise error.
 
     async def get_song_by_url(self, source: Playables, url: str) -> type[Playables]:
-        return (await source.search(url))[0] # type: ignore
+        return (await source.search(url))[0]  # type: ignore
 
     def build_selection_tracks(self, tracks: list[wavelink.Playable]) -> discord.Embed:
         embed = discord.Embed(title="Tracks (Limited to 10)")
         for no, track in enumerate(tracks[:25], 1):
-            embed.add_field(name=f"{no}. {track.author}",value=track.title, inline=True)
+            embed.add_field(
+                name=f"{no}. {track.author}", value=track.title, inline=True
+            )
         return embed
-    
+
     def generate_success_embed(self, title: str) -> discord.Embed:
-        return discord.Embed(title=title,color=discord.Color.green())
+        return discord.Embed(title=title, color=discord.Color.green())
 
     @commands.hybrid_command()  # type: ignore
     async def play(
@@ -199,29 +208,41 @@ class Music(commands.Cog):
         vc = await self.get_vc(ctx)
         if detect_url(query):
             source = detect_source(query)  # type: ignore[assignment]
-            await self.play_song(vc, (await self.get_song_by_url(source, query))) # type: ignore
+            await self.play_song(vc, (await self.get_song_by_url(source, query)))  # type: ignore
             return
-        tracks = (await self.search_tracks(self.convert_source(source, playlist), query))[:25] # type: ignore
+        tracks = (await self.search_tracks(self.convert_source(source, playlist), query))[:25]  # type: ignore
         await ctx.reply(embed=self.build_selection_tracks(tracks))
         try:
-            track: wavelink.Playable = tracks[int((await self.bot.wait_for("message", check= lambda x: x.author == ctx.author)).content) - 1]
+            track: wavelink.Playable = tracks[
+                int(
+                    (
+                        await self.bot.wait_for(
+                            "message", check=lambda x: x.author == ctx.author
+                        )
+                    ).content
+                )
+                - 1
+            ]
         except ValueError:
             await ctx.reply(embed=self.generate_error("Invalid index! Exiting"))
         except IndexError:
             await ctx.reply(embed=self.generate_error("Out of index bound! Exiting"))
         else:
             await self.play_song(vc, track)
-            await ctx.reply(embed=self.generate_success_embed(f"Successfully added {str(track)}"))
+            await ctx.reply(
+                embed=self.generate_success_embed(f"Successfully added {str(track)}")
+            )
 
-
-    async def play_song(self,vc: wavelink.Player, track: Playables) -> None:
+    async def play_song(self, vc: wavelink.Player, track: Playables) -> None:
         if vc.is_playing():
-            await vc.queue.put_wait(track) # type: ignore
+            await vc.queue.put_wait(track)  # type: ignore
             return
-        await vc.play(track) # type: ignore
+        await vc.play(track)  # type: ignore
 
-    @commands.command() # type: ignore
-    async def pause(self, ctx: commands.Context, force: typing.Optional[bool] = None) -> None:
+    @commands.command()  # type: ignore
+    async def pause(
+        self, ctx: commands.Context, force: typing.Optional[bool] = None
+    ) -> None:
         vc = await self.get_vc(ctx)
         if force is not None:
             match force, vc.is_paused():
@@ -241,7 +262,11 @@ class Music(commands.Cog):
                     await vc.pause()
                     return
         await vc.pause()
-        await ctx.reply(embed=self.generate_success_embed(f"Successfully {'paused' if vc.is_paused() else 'resumed'}."))
+        await ctx.reply(
+            embed=self.generate_success_embed(
+                f"Successfully {'paused' if vc.is_paused() else 'resumed'}."
+            )
+        )
 
     @commands.command()
     async def stop(self, ctx: commands.Context) -> None:
