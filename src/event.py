@@ -9,6 +9,7 @@ from discord.utils import MISSING
 
 from .utils.exceptions import LavalinkingException
 
+
 class Events(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -87,7 +88,7 @@ class Events(commands.Cog):
                 )
             )
         elif isinstance(error, LavalinkingException):
-            return # completely ignore this fucker
+            return  # completely ignore this fucker
         else:
             await ctx.send(
                 embed=(

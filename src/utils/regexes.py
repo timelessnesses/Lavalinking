@@ -1,7 +1,8 @@
 import re
+import typing
 
 import wavelink
-import typing
+
 from .types import SpotifyTrackTypes
 
 if typing.TYPE_CHECKING:
@@ -36,16 +37,16 @@ def detect_source(
     Detect source based on the URL pattern.
     """
 
-    if re.findall(YOUTUBE_VIDEO_REGEX, url): # ??????
-        return wavelink.YouTubeTrack # type: ignore
+    if re.findall(YOUTUBE_VIDEO_REGEX, url):  # ??????
+        return wavelink.YouTubeTrack  # type: ignore
     elif re.findall(YOUTUBE_PLAYLIST_REGEX, url):
-        return wavelink.YouTubePlaylist # type: ignore
+        return wavelink.YouTubePlaylist  # type: ignore
     elif re.findall(SPOTIFY_SINGLE_REGEX, url):
-        return SpotifyTrackTypes.track # type: ignore
+        return SpotifyTrackTypes.track  # type: ignore
     elif re.findall(SPOTIFY_PLAYLIST_REGEX, url):
-        return SpotifyTrackTypes.playlist # type: ignore
+        return SpotifyTrackTypes.playlist  # type: ignore
     elif re.findall(SOUNDCLOUD_SINGLE_REGEX, url):
-        return wavelink.SoundCloudTrack # type: ignore
+        return wavelink.SoundCloudTrack  # type: ignore
     elif re.findall(SOUNDCLOUD_SETS_REGEX, url):
-        return wavelink.SoundCloudPlaylist # type: ignore
-    return wavelink.GenericTrack # type: ignore
+        return wavelink.SoundCloudPlaylist  # type: ignore
+    return wavelink.GenericTrack  # type: ignore

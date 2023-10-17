@@ -8,9 +8,9 @@ from discord.ext import commands
 
 from config import config
 
+from .utils.exceptions import LavalinkingException
 from .utils.regexes import detect_source, detect_url
 from .utils.types import Sources, SpotifyTrackTypes
-from .utils.exceptions import LavalinkingException
 
 Playables = typing.TypeVar(
     "Playables",
@@ -28,9 +28,18 @@ Playables = typing.TypeVar(
     wavelink.GenericTrack,
     wavelink.ext.spotify.SpotifyTrack,
     wavelink.Playable,
-) # Vomit
+)  # Vomit
 
-Tracks = wavelink.YouTubeTrack | wavelink.YouTubePlaylist | wavelink.SoundCloudTrack | wavelink.SoundCloudPlaylist | wavelink.GenericTrack | wavelink.ext.spotify.SpotifyTrack | wavelink.Playable
+Tracks = (
+    wavelink.YouTubeTrack
+    | wavelink.YouTubePlaylist
+    | wavelink.SoundCloudTrack
+    | wavelink.SoundCloudPlaylist
+    | wavelink.GenericTrack
+    | wavelink.ext.spotify.SpotifyTrack
+    | wavelink.Playable
+)
+
 
 class Music(commands.Cog):
     # stuffs
@@ -46,7 +55,16 @@ class Music(commands.Cog):
         self.bot.loop.create_task(self.connect())
         self.connected = False
         # self.bind_ctx: dict[discord.Guild, wavelink.Player] = {}
-        self.playings: dict[discord.Guild, wavelink.YouTubeTrack | wavelink.YouTubePlaylist | wavelink.SoundCloudTrack | wavelink.SoundCloudPlaylist | wavelink.GenericTrack | wavelink.ext.spotify.SpotifyTrack | wavelink.Playable] = {}
+        self.playings: dict[
+            discord.Guild,
+            wavelink.YouTubeTrack
+            | wavelink.YouTubePlaylist
+            | wavelink.SoundCloudTrack
+            | wavelink.SoundCloudPlaylist
+            | wavelink.GenericTrack
+            | wavelink.ext.spotify.SpotifyTrack
+            | wavelink.Playable,
+        ] = {}
 
     async def connect(self) -> None:
         if self.connected:
@@ -77,7 +95,7 @@ class Music(commands.Cog):
             color=discord.Color.red(), title="Error", description=title
         )
 
-    async def cog_check(self, ctx: commands.Context): # type: ignore
+    async def cog_check(self, ctx: commands.Context):  # type: ignore
         if ctx.guild is None:
             return False
         return True
@@ -85,7 +103,7 @@ class Music(commands.Cog):
     @commands.Cog.listener()
     async def on_wavelink_node_ready(self, node: wavelink.Node) -> None:
         self.logger.info(f"Successfully connected to node: {node.uri}")
-    
+
     @commands.Cog.listener()
     async def on_wavelink_track_start(self, pl: wavelink.TrackEventPayload) -> None:
         if pl.player.guild is None:
@@ -126,10 +144,12 @@ class Music(commands.Cog):
             vc: wavelink.Player = wavelink.NodePool.get_connected_node().get_player(
                 ctx.guild.id  # type: ignore[union-attr]
             )
-        elif ctx.author.voice: # type: ignore
+        elif ctx.author.voice:  # type: ignore
             vc: wavelink.Player = await self.join(ctx.author.voice)  # type: ignore
         if vc is None:
-            await ctx.reply(embed=self.generate_error("No voice chat instance detected."))
+            await ctx.reply(
+                embed=self.generate_error("No voice chat instance detected.")
+            )
             raise LavalinkingException("Voice chat not found!")
         return vc
 
@@ -274,7 +294,7 @@ class Music(commands.Cog):
         await vc.pause()
         await ctx.reply(
             embed=self.generate_success_embed(
-                f"Successfully {'paused' if vc.is_paused() else 'resumed'}." # type: ignore
+                f"Successfully {'paused' if vc.is_paused() else 'resumed'}."  # type: ignore
             )
         )
 
@@ -291,23 +311,20 @@ class Music(commands.Cog):
         vc = await self.get_vc(ctx)
         await vc.set_volume(volume)
         await ctx.reply(
-            embed=self.generate_success_embed(f"Successfully changed volume to: {volume}")
+            embed=self.generate_success_embed(
+                f"Successfully changed volume to: {volume}"
+            )
         )
 
-    @commands.hybrid_command() # type: ignore
-    async def leave(
-        self, ctx: commands.Context
-    ) -> None:
+    @commands.hybrid_command()  # type: ignore
+    async def leave(self, ctx: commands.Context) -> None:
         vc = await self.get_vc(ctx)
         await vc.disconnect()
         await ctx.reply(embed=self.generate_success_embed("Left!"))
 
-    @commands.hybrid_command() # type: ignore
+    @commands.hybrid_command()  # type: ignore
     async def now(self, ctx: commands.Context) -> None:
-        vc = await self.get_vc(ctx)
-
-        
-
+        await self.get_vc(ctx)
 
 
 async def setup(bot: commands.Bot) -> None:
