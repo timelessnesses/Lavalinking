@@ -1,8 +1,11 @@
 import re
 
 import wavelink
-
+import typing
 from .types import SpotifyTrackTypes
+
+if typing.TYPE_CHECKING:
+    from ..music import Playables
 
 REGEX_DETECT_URL = r"(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-&?=%.]+"
 # regex (help) (thanks chatgpt)
@@ -28,21 +31,21 @@ def detect_url(url: str) -> bool:
 
 def detect_source(
     url: str,
-) -> wavelink.Playable | wavelink.Playlist | SpotifyTrackTypes:
+) -> "Playables":
     """
     Detect source based on the URL pattern.
     """
 
-    if re.findall(YOUTUBE_VIDEO_REGEX, url):
-        return wavelink.YouTubeTrack
+    if re.findall(YOUTUBE_VIDEO_REGEX, url): # ??????
+        return wavelink.YouTubeTrack # type: ignore
     elif re.findall(YOUTUBE_PLAYLIST_REGEX, url):
-        return wavelink.YouTubePlaylist
+        return wavelink.YouTubePlaylist # type: ignore
     elif re.findall(SPOTIFY_SINGLE_REGEX, url):
-        return SpotifyTrackTypes.track
+        return SpotifyTrackTypes.track # type: ignore
     elif re.findall(SPOTIFY_PLAYLIST_REGEX, url):
-        return SpotifyTrackTypes.playlist
+        return SpotifyTrackTypes.playlist # type: ignore
     elif re.findall(SOUNDCLOUD_SINGLE_REGEX, url):
-        return wavelink.SoundCloudTrack
+        return wavelink.SoundCloudTrack # type: ignore
     elif re.findall(SOUNDCLOUD_SETS_REGEX, url):
-        return wavelink.SoundCloudPlaylist
-    return wavelink.GenericTrack
+        return wavelink.SoundCloudPlaylist # type: ignore
+    return wavelink.GenericTrack # type: ignore

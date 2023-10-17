@@ -7,6 +7,7 @@ import discord
 from discord.ext import commands
 from discord.utils import MISSING
 
+from .utils.exceptions import LavalinkingException
 
 class Events(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -20,7 +21,7 @@ class Events(commands.Cog):
         )
         discord_version = discord.__version__
         file = MISSING
-        if len(error_message) <= 4095:
+        if len(error_message) >= 4095:
             file = discord.File(
                 fp=io.BytesIO(error_message.encode()), filename="errorlog.py"
             )
@@ -85,6 +86,8 @@ class Events(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
+        elif isinstance(error, LavalinkingException):
+            return # completely ignore this fucker
         else:
             await ctx.send(
                 embed=(

@@ -1,7 +1,7 @@
 import enum
 import typing
 
-import wavelink.ext
+import wavelink.ext.spotify
 
 Sources = typing.Literal["YouTube", "Spotify", "SoundCloud"]
 

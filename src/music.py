@@ -10,6 +10,7 @@ from config import config
 
 from .utils.regexes import detect_source, detect_url
 from .utils.types import Sources, SpotifyTrackTypes
+from .utils.exceptions import LavalinkingException
 
 Playables = typing.TypeVar(
     "Playables",
@@ -27,8 +28,9 @@ Playables = typing.TypeVar(
     wavelink.GenericTrack,
     wavelink.ext.spotify.SpotifyTrack,
     wavelink.Playable,
-)
+) # Vomit
 
+Tracks = wavelink.YouTubeTrack | wavelink.YouTubePlaylist | wavelink.SoundCloudTrack | wavelink.SoundCloudPlaylist | wavelink.GenericTrack | wavelink.ext.spotify.SpotifyTrack | wavelink.Playable
 
 class Music(commands.Cog):
     # stuffs
@@ -43,7 +45,8 @@ class Music(commands.Cog):
         self.logger = logging.getLogger("lavalinking.src.music")
         self.bot.loop.create_task(self.connect())
         self.connected = False
-        self.bind_ctx: dict[discord.Guild, wavelink.Player] = {}
+        # self.bind_ctx: dict[discord.Guild, wavelink.Player] = {}
+        self.playings: dict[discord.Guild, wavelink.YouTubeTrack | wavelink.YouTubePlaylist | wavelink.SoundCloudTrack | wavelink.SoundCloudPlaylist | wavelink.GenericTrack | wavelink.ext.spotify.SpotifyTrack | wavelink.Playable] = {}
 
     async def connect(self) -> None:
         if self.connected:
@@ -74,9 +77,20 @@ class Music(commands.Cog):
             color=discord.Color.red(), title="Error", description=title
         )
 
-    async def cog_check(self, ctx: commands.Context) -> bool:  # type: ignore
+    async def cog_check(self, ctx: commands.Context): # type: ignore
         if ctx.guild is None:
             return False
+        return True
+
+    @commands.Cog.listener()
+    async def on_wavelink_node_ready(self, node: wavelink.Node) -> None:
+        self.logger.info(f"Successfully connected to node: {node.uri}")
+    
+    @commands.Cog.listener()
+    async def on_wavelink_track_start(self, pl: wavelink.TrackEventPayload) -> None:
+        if pl.player.guild is None:
+            return
+        self.playings[pl.player.guild] = pl.track
 
     @commands.hybrid_command()  # type: ignore
     async def join(
@@ -118,9 +132,11 @@ class Music(commands.Cog):
             vc: wavelink.Player = wavelink.NodePool.get_connected_node().get_player(
                 ctx.guild.id  # type: ignore[union-attr]
             )
-        else:
-            vc: wavelink.Player = await self.join(ctx)  # type: ignore
-
+        elif ctx.author.voice: # type: ignore
+            vc: wavelink.Player = await self.join(ctx.author.voice)  # type: ignore
+        if vc is None:
+            await ctx.reply(embed=self.generate_error("No voice chat instance detected."))
+            raise LavalinkingException("Voice chat not found!")
         return vc
 
     async def get_track(
@@ -187,7 +203,7 @@ class Music(commands.Cog):
 
     def build_selection_tracks(self, tracks: list[wavelink.Playable]) -> discord.Embed:
         embed = discord.Embed(title="Tracks (Limited to 10)")
-        for no, track in enumerate(tracks[:25], 1):
+        for no, track in enumerate(tracks[:10], 1):
             embed.add_field(
                 name=f"{no}. {track.author}", value=track.title, inline=True
             )
@@ -210,7 +226,7 @@ class Music(commands.Cog):
             source = detect_source(query)  # type: ignore[assignment]
             await self.play_song(vc, (await self.get_song_by_url(source, query)))  # type: ignore
             return
-        tracks = (await self.search_tracks(self.convert_source(source, playlist), query))[:25]  # type: ignore
+        tracks = (await self.search_tracks(self.convert_source(source, playlist), query))[:10]  # type: ignore
         await ctx.reply(embed=self.build_selection_tracks(tracks))
         try:
             track: wavelink.Playable = tracks[
@@ -264,13 +280,15 @@ class Music(commands.Cog):
         await vc.pause()
         await ctx.reply(
             embed=self.generate_success_embed(
-                f"Successfully {'paused' if vc.is_paused() else 'resumed'}."
+                f"Successfully {'paused' if vc.is_paused() else 'resumed'}." # type: ignore
             )
         )
 
     @commands.command()
     async def stop(self, ctx: commands.Context) -> None:
-        pass
+        vc = await self.get_vc(ctx)
+        await vc.stop()
+        await ctx.reply(embed=self.generate_success_embed("Stopped!"))
 
     @commands.hybrid_command()  # type: ignore
     async def volume(
@@ -279,12 +297,23 @@ class Music(commands.Cog):
         vc = await self.get_vc(ctx)
         await vc.set_volume(volume)
         await ctx.reply(
-            embed=discord.Embed(
-                title="Success",
-                description="Successfully set volume to: {}".format(volume),
-                color=discord.Color.green(),
-            )
+            embed=self.generate_success_embed(f"Successfully changed volume to: {volume}")
         )
+
+    @commands.hybrid_command() # type: ignore
+    async def leave(
+        self, ctx: commands.Context
+    ) -> None:
+        vc = await self.get_vc(ctx)
+        await vc.disconnect()
+        await ctx.reply(embed=self.generate_success_embed("Left!"))
+
+    @commands.hybrid_command() # type: ignore
+    async def now(self, ctx: commands.Context) -> None:
+        vc = await self.get_vc(ctx)
+
+        
+
 
 
 async def setup(bot: commands.Bot) -> None:
