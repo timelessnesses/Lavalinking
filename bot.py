@@ -146,6 +146,9 @@ def get_git_revision_short_hash() -> str:
 
 
 def get_version():
+    if bool(int(os.getenv("DOCKERIZED", 0))):
+        bot.version_ = f"Containerized ({os.getenv('REVISION')})"
+        return
     is_updated = subprocess.check_output("git status", shell=True).decode("ascii")
 
     if "modified" in is_updated:

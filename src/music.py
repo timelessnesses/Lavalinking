@@ -102,12 +102,6 @@ class Music(commands.Cog):
     ) -> typing.Optional[wavelink.Player]:
         """
         Make the bot join to the specified voice channel (supply channel argument is required if you are not in any voice chat in this server.)
-
-        [Arguments]
-            channel: Optional[Voice channel, Stage Channel] - Channel that you want bot to join. (Defaults to user's current voice chat channel. If user did not join the voice chat then it will use this argument.)
-
-        [Possible Exceptions]
-            Voice chat argument required. - Will raise this error when the user did not join any voice chat channel and the `channel` argument is empty.
         """
 
         try:

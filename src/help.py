@@ -232,7 +232,7 @@ class PaginatedHelpCommand(commands.HelpCommand):
                 continue
 
             cog = bot.get_cog(name)
-            all_commands[cog] = sorted(children, key=lambda c: c.qualified_name)
+            all_commands[cog] = sorted(children, key=lambda c: c.qualified_name) # type: ignore
 
         menu = HelpMenu(FrontPageSource(), ctx=self.context)
         menu.add_categories(all_commands)

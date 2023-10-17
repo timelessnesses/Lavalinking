@@ -1,6 +1,9 @@
 services:
   bot:
-    build: .
+    build:
+      context: .
+      args:
+        - REVISION=${LAVALINKING_REV}
     env_file:
       - .env
     environment:
