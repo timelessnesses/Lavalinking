@@ -1,6 +1,7 @@
+import datetime
 import logging
 import typing
-import datetime
+
 import discord
 import wavelink
 import wavelink.ext.spotify
@@ -356,7 +357,7 @@ class Music(commands.Cog):
         try:
             pos = track.position  # type: ignore
         except AttributeError:
-            pos = None
+            pass
         e = discord.Embed(
             title=f"Now Playing: {author} - {track.title}",
             description=f"""
@@ -376,7 +377,7 @@ class Music(commands.Cog):
             return f"{str(d_pos)}/{str(d_length)} ({str(d_length - d_pos)}) ({100 * d_pos.total_seconds() / d_length.total_seconds()}%)"
         return f"{str(d_length)}"
 
-    @commands.hybrid_command() # type: ignore
+    @commands.hybrid_command()  # type: ignore
     async def skip(self, ctx: commands.Context) -> None:
         vc = await self.get_vc(ctx)
         skipvotes = self.skips[ctx.guild]  # type: ignore
@@ -395,7 +396,7 @@ class Music(commands.Cog):
             )
         )
 
-    @commands.hybrid_command() # type: ignore
+    @commands.hybrid_command()  # type: ignore
     async def queue(self, ctx: commands.Context) -> None:
         vc = await self.get_vc(ctx)
         if len(vc.queue) == 0:
@@ -404,13 +405,15 @@ class Music(commands.Cog):
         e = discord.Embed(title="Queue (Limited to 10 songs)")
         c = 0
         for track in vc.queue:
-            e.add_field(name=f"{track.__dict__.get('author', ', '.join(track.__dict__.get('artists', [])))}", value=f"{track.title}")
+            e.add_field(
+                name=f"{track.__dict__.get('author', ', '.join(track.__dict__.get('artists', [])))}",
+                value=f"{track.title}",
+            )
             c += 1
             if c == 10:
                 break
         await ctx.reply(embed=e)
 
-    
 
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(Music(bot))
