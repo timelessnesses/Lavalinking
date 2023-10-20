@@ -1,7 +1,8 @@
 import re
+import typing
 
 import wavelink
-import typing
+
 from .types import SpotifyTrackTypes
 
 if typing.TYPE_CHECKING:

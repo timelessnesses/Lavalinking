@@ -8,9 +8,9 @@ from discord.ext import commands
 
 from config import config
 
+from .utils.exceptions import LavalinkingException
 from .utils.regexes import detect_source, detect_url
 from .utils.types import Sources, SpotifyTrackTypes
-from .utils.exceptions import LavalinkingException
 
 Playables = typing.TypeVar(
     "Playables",
