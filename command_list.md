@@ -3,11 +3,9 @@
 ## Working on
 
 - loop
-- now
 - pause
-- queue
 - remove
-- skip
+- autoplay
 
 ## Done
 
@@ -16,3 +14,6 @@
 - volume
 - leave
 - stop
+- now
+- skip
+- queue

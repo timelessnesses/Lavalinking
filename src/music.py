@@ -1,6 +1,6 @@
 import logging
 import typing
-
+import datetime
 import discord
 import wavelink
 import wavelink.ext.spotify
@@ -28,9 +28,18 @@ Playables = typing.TypeVar(
     wavelink.GenericTrack,
     wavelink.ext.spotify.SpotifyTrack,
     wavelink.Playable,
-) # Vomit
+)  # Vomit
 
-Tracks = wavelink.YouTubeTrack | wavelink.YouTubePlaylist | wavelink.SoundCloudTrack | wavelink.SoundCloudPlaylist | wavelink.GenericTrack | wavelink.ext.spotify.SpotifyTrack | wavelink.Playable
+Tracks = (
+    wavelink.YouTubeTrack
+    | wavelink.YouTubePlaylist
+    | wavelink.SoundCloudTrack
+    | wavelink.SoundCloudPlaylist
+    | wavelink.GenericTrack
+    | wavelink.ext.spotify.SpotifyTrack
+    | wavelink.Playable
+)
+
 
 class Music(commands.Cog):
     # stuffs
@@ -46,7 +55,17 @@ class Music(commands.Cog):
         self.bot.loop.create_task(self.connect())
         self.connected = False
         # self.bind_ctx: dict[discord.Guild, wavelink.Player] = {}
-        self.playings: dict[discord.Guild, wavelink.YouTubeTrack | wavelink.YouTubePlaylist | wavelink.SoundCloudTrack | wavelink.SoundCloudPlaylist | wavelink.GenericTrack | wavelink.ext.spotify.SpotifyTrack | wavelink.Playable] = {}
+        self.playings: dict[
+            discord.Guild,
+            wavelink.YouTubeTrack
+            | wavelink.YouTubePlaylist
+            | wavelink.SoundCloudTrack
+            | wavelink.SoundCloudPlaylist
+            | wavelink.GenericTrack
+            | wavelink.ext.spotify.SpotifyTrack
+            | wavelink.Playable,
+        ] = {}
+        self.skips: dict[discord.Guild, list[discord.Member]] = {}
 
     async def connect(self) -> None:
         if self.connected:
@@ -77,7 +96,7 @@ class Music(commands.Cog):
             color=discord.Color.red(), title="Error", description=title
         )
 
-    async def cog_check(self, ctx: commands.Context): # type: ignore
+    async def cog_check(self, ctx: commands.Context):  # type: ignore
         if ctx.guild is None:
             return False
         return True
@@ -85,12 +104,13 @@ class Music(commands.Cog):
     @commands.Cog.listener()
     async def on_wavelink_node_ready(self, node: wavelink.Node) -> None:
         self.logger.info(f"Successfully connected to node: {node.uri}")
-    
+
     @commands.Cog.listener()
     async def on_wavelink_track_start(self, pl: wavelink.TrackEventPayload) -> None:
         if pl.player.guild is None:
             return
         self.playings[pl.player.guild] = pl.track
+        self.skips[pl.player.guild].clear()
 
     @commands.hybrid_command()  # type: ignore
     async def join(
@@ -126,10 +146,12 @@ class Music(commands.Cog):
             vc: wavelink.Player = wavelink.NodePool.get_connected_node().get_player(
                 ctx.guild.id  # type: ignore[union-attr]
             )
-        elif ctx.author.voice: # type: ignore
+        elif ctx.author.voice:  # type: ignore
             vc: wavelink.Player = await self.join(ctx.author.voice)  # type: ignore
         if vc is None:
-            await ctx.reply(embed=self.generate_error("No voice chat instance detected."))
+            await ctx.reply(
+                embed=self.generate_error("No voice chat instance detected.")
+            )
             raise LavalinkingException("Voice chat not found!")
         return vc
 
@@ -274,7 +296,7 @@ class Music(commands.Cog):
         await vc.pause()
         await ctx.reply(
             embed=self.generate_success_embed(
-                f"Successfully {'paused' if vc.is_paused() else 'resumed'}." # type: ignore
+                f"Successfully {'paused' if vc.is_paused() else 'resumed'}."  # type: ignore
             )
         )
 
@@ -291,24 +313,104 @@ class Music(commands.Cog):
         vc = await self.get_vc(ctx)
         await vc.set_volume(volume)
         await ctx.reply(
-            embed=self.generate_success_embed(f"Successfully changed volume to: {volume}")
+            embed=self.generate_success_embed(
+                f"Successfully changed volume to: {volume}"
+            )
         )
 
-    @commands.hybrid_command() # type: ignore
-    async def leave(
-        self, ctx: commands.Context
-    ) -> None:
+    @commands.hybrid_command()  # type: ignore
+    async def leave(self, ctx: commands.Context) -> None:
         vc = await self.get_vc(ctx)
         await vc.disconnect()
         await ctx.reply(embed=self.generate_success_embed("Left!"))
 
-    @commands.hybrid_command() # type: ignore
+    @commands.hybrid_command()  # type: ignore
     async def now(self, ctx: commands.Context) -> None:
         vc = await self.get_vc(ctx)
+        track = self.playings.get(ctx.guild)  # type: ignore
+        if track:
+            await ctx.reply(embed=self.generate_song_embed(track, vc))
+        else:
+            await ctx.reply(
+                embed=self.generate_error(
+                    "Cannot get current playing track. Is it playing?"
+                )
+            )
 
-        
+    def generate_song_embed(
+        self,
+        track: wavelink.YouTubeTrack
+        | wavelink.YouTubePlaylist
+        | wavelink.SoundCloudTrack
+        | wavelink.SoundCloudPlaylist
+        | wavelink.GenericTrack
+        | wavelink.ext.spotify.SpotifyTrack
+        | wavelink.Playable,
+        player: wavelink.Player,
+    ) -> discord.Embed:
+        author = ""
+        try:
+            author: str = track.author  # type: ignore
+        except AttributeError:
+            author = ", ".join(track.artists)  # type: ignore
+        try:
+            pos = track.position  # type: ignore
+        except AttributeError:
+            pos = None
+        e = discord.Embed(
+            title=f"Now Playing: {author} - {track.title}",
+            description=f"""
+- Author{"s" if "," in author else ""}: {author}
+- Title: {track.title}
+- Progress: {self.convert_dur_pos_to_time(player.position,track.length)}
+    """,
+        )
+        return e
 
+    def convert_dur_pos_to_time(
+        self, pos: typing.Optional[float], length: float
+    ) -> str:
+        d_length = datetime.timedelta(milliseconds=length)
+        if pos:
+            d_pos = datetime.timedelta(milliseconds=pos)
+            return f"{str(d_pos)}/{str(d_length)} ({str(d_length - d_pos)}) ({100 * d_pos.total_seconds() / d_length.total_seconds()}%)"
+        return f"{str(d_length)}"
 
+    @commands.hybrid_command() # type: ignore
+    async def skip(self, ctx: commands.Context) -> None:
+        vc = await self.get_vc(ctx)
+        skipvotes = self.skips[ctx.guild]  # type: ignore
+        if ctx.author in skipvotes:
+            await ctx.reply(
+                embed=self.generate_error("You are already voted for skipping!")
+            )
+            return
+        self.skips[ctx.guild].append(ctx.author)  # type: ignore
+        if len(self.skips[ctx.guild]) >= 3:  # type: ignore
+            await vc.stop(force=True)
+            return
+        await ctx.reply(
+            embed=self.generate_success_embed(
+                "Successfully added you in to the skip votes!"
+            )
+        )
+
+    @commands.hybrid_command() # type: ignore
+    async def queue(self, ctx: commands.Context) -> None:
+        vc = await self.get_vc(ctx)
+        if len(vc.queue) == 0:
+            await ctx.reply(embed=self.generate_error("No more songs in queue!"))
+            return
+        e = discord.Embed(title="Queue (Limited to 10 songs)")
+        c = 0
+        for track in vc.queue:
+            e.add_field(name=f"{track.__dict__.get('author', ', '.join(track.__dict__.get('artists', [])))}", value=f"{track.title}")
+            c += 1
+            if c == 10:
+                break
+        await ctx.reply(embed=e)
+
+    
 
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(Music(bot))
