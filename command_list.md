@@ -2,10 +2,7 @@
 
 ## Working on
 
-- loop
-- pause
-- remove
-- autoplay
+- Permission system
 
 ## Done
 
@@ -17,3 +14,7 @@
 - now
 - skip
 - queue
+- autoplay
+- loop
+- pause
+- remove

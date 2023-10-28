@@ -6,6 +6,7 @@ import discord
 import wavelink
 import wavelink.ext.spotify
 from discord.ext import commands
+from discord.app_commands import describe
 
 from config import config
 
@@ -43,6 +44,11 @@ Tracks = (
 
 
 class Music(commands.Cog):
+    
+    """
+    A music category with a very powerful controlling commands
+    """
+
     # stuffs
     node: wavelink.Node
     sc: wavelink.ext.spotify.SpotifyClient
@@ -55,17 +61,7 @@ class Music(commands.Cog):
         self.logger = logging.getLogger("lavalinking.src.music")
         self.bot.loop.create_task(self.connect())
         self.connected = False
-        # self.bind_ctx: dict[discord.Guild, wavelink.Player] = {}
-        self.playings: dict[
-            discord.Guild,
-            wavelink.YouTubeTrack
-            | wavelink.YouTubePlaylist
-            | wavelink.SoundCloudTrack
-            | wavelink.SoundCloudPlaylist
-            | wavelink.GenericTrack
-            | wavelink.ext.spotify.SpotifyTrack
-            | wavelink.Playable,
-        ] = {}
+        self.shuffles: dict[discord.Guild, bool] = {}
         self.skips: dict[discord.Guild, list[discord.Member]] = {}
 
     async def connect(self) -> None:
@@ -110,10 +106,16 @@ class Music(commands.Cog):
     async def on_wavelink_track_start(self, pl: wavelink.TrackEventPayload) -> None:
         if pl.player.guild is None:
             return
-        self.playings[pl.player.guild] = pl.track
         self.skips[pl.player.guild].clear()
+    
+    @commands.Cog.listener()
+    async def on_wavelink_track_end(self, pl: wavelink.TrackEventPayload) -> None:
+        guild = self.shuffles.get(pl.player.guild) # type: ignore
+        if guild:
+            pl.player.queue.shuffle()
 
     @commands.hybrid_command()  # type: ignore
+    @describe(channel = "Specify a voice/stage channel")
     async def join(
         self,
         ctx: commands.Context,
@@ -187,6 +189,9 @@ class Music(commands.Cog):
     async def search_tracks(
         self, source: Playables, query: str
     ) -> list[type[Playables]]:
+        """
+        It search tracks
+        """
         node = wavelink.NodePool.get_connected_node()
         return await source.search(query, node=node)  # type: ignore
 
@@ -198,6 +203,9 @@ class Music(commands.Cog):
         | wavelink.ext.spotify.SpotifyTrack
         | wavelink.GenericTrack
     ):
+        """
+        Converting source string to actual thing
+        """
         match source, playlist:
             case "YouTube", False:
                 return wavelink.YouTubeTrack  # type: ignore
@@ -215,10 +223,17 @@ class Music(commands.Cog):
             "Invalid source string: {}".format(source)
         )  # mypy doesn't know the default will raise error.
 
-    async def get_song_by_url(self, source: Playables, url: str) -> type[Playables]:
-        return (await source.search(url))[0]  # type: ignore
+    async def get_song_by_url(self, source: wavelink.Playable, url: str) -> type[Playables]:
+        """
+        Get the actual song by the URL itself (i had no idea why )
+        """
+        return (await self.node.get_tracks(source, url))[0] # type: ignore
+        # shut the fucvk up mypy
 
     def build_selection_tracks(self, tracks: list[wavelink.Playable]) -> discord.Embed:
+        """
+        build a track selection 
+        """
         embed = discord.Embed(title="Tracks (Limited to 10)")
         for no, track in enumerate(tracks[:10], 1):
             embed.add_field(
@@ -227,17 +242,29 @@ class Music(commands.Cog):
         return embed
 
     def generate_success_embed(self, title: str) -> discord.Embed:
+        """
+        oh well
+        """
         return discord.Embed(title=title, color=discord.Color.green())
 
     @commands.hybrid_command()  # type: ignore
+    @describe(
+        query = "Query or URL of the song",
+        source = "Specify source (Will be ignored if the query is actually an URL)",
+        playlist = "Force specifying you need playlist",
+        populate = "wavelink's populate tracks (I had no fucking clue)"
+    )
     async def play(
         self,
         ctx: commands.Context,
         query: str,
         source: Sources = "YouTube",
         playlist: bool = False,
-        autoadd: bool = False,
+        populate: bool = False
     ) -> None:
+        """
+        Play a song
+        """
         vc = await self.get_vc(ctx)
         if detect_url(query):
             source = detect_source(query)  # type: ignore[assignment]
@@ -261,57 +288,61 @@ class Music(commands.Cog):
         except IndexError:
             await ctx.reply(embed=self.generate_error("Out of index bound! Exiting"))
         else:
-            await self.play_song(vc, track)
+            await self.play_song(vc, track, populate)
             await ctx.reply(
                 embed=self.generate_success_embed(f"Successfully added {str(track)}")
             )
 
-    async def play_song(self, vc: wavelink.Player, track: Playables) -> None:
+    @commands.hybrid_command() # type: ignore
+    @describe(enable = "Enable auto play or not?")
+    async def autoplay(self, ctx: commands.Context, enable: bool) -> None:
+        """
+        If autoplay is enabled, bot will actually automatically adding new songs to the queue based on recommendation of spotify and youtube.
+        """
+        vc = await self.get_vc(ctx)
+
+        if enable != vc.autoplay:
+            vc.autoplay = enable
+
+        await ctx.reply(embed=self.generate_success_embed(
+            f"Successfully turned {'on' if enable else 'off'} auto play feature!"
+        ))
+    
+    async def play_song(self, vc: wavelink.Player, track: Playables, populate: bool) -> None:
+        """
+        IT FUCKING PLAY SONG
+        """
         if vc.is_playing():
             await vc.queue.put_wait(track)  # type: ignore
             return
-        await vc.play(track)  # type: ignore
-
-    @commands.command()  # type: ignore
-    async def pause(
-        self, ctx: commands.Context, force: typing.Optional[bool] = None
-    ) -> None:
-        vc = await self.get_vc(ctx)
-        if force is not None:
-            match force, vc.is_paused():
-                case False, False:
-                    await ctx.reply(embed=self.generate_error("Already playing!"))
-                    await vc.pause()
-                    return
-                case False, True:
-                    await ctx.reply(embed=self.generate_success_embed("Resuming!"))
-                    await vc.pause()
-                    return
-                case True, True:
-                    await ctx.reply(embed=self.generate_error("Already paused!"))
-                    return
-                case True, False:
-                    await ctx.reply(embed=self.generate_success_embed("Pausing!"))
-                    await vc.pause()
-                    return
-        await vc.pause()
-        await ctx.reply(
-            embed=self.generate_success_embed(
-                f"Successfully {'paused' if vc.is_paused() else 'resumed'}."  # type: ignore
-            )
-        )
+        await vc.play(track, populate)  # type: ignore
 
     @commands.command()
-    async def stop(self, ctx: commands.Context) -> None:
+    @describe(clear = "Clearing queue")
+    async def stop(self, ctx: commands.Context, clear: bool = False) -> None:
+        """
+        Stop the music
+        """
         vc = await self.get_vc(ctx)
         await vc.stop()
+        if clear:
+            vc.queue.clear()
         await ctx.reply(embed=self.generate_success_embed("Stopped!"))
 
     @commands.hybrid_command()  # type: ignore
+    @describe(volume="Change the bot's volume.")
     async def volume(
-        self, ctx: commands.Context, volume: discord.app_commands.Range[int, 0, 1000]
+        self, ctx: commands.Context, volume: discord.app_commands.Range[int, 0, 1000] | None
     ) -> None:
+        """
+        Change the bot's volume
+        """
         vc = await self.get_vc(ctx)
+        if volume is None:
+            await ctx.reply(embed=self.generate_success_embed(
+                f"Current volume is: {vc.volume}%"
+            ))
+            return
         await vc.set_volume(volume)
         await ctx.reply(
             embed=self.generate_success_embed(
@@ -321,14 +352,20 @@ class Music(commands.Cog):
 
     @commands.hybrid_command()  # type: ignore
     async def leave(self, ctx: commands.Context) -> None:
+        """
+        Making the bot leave the current voice chat it's currently in
+        """
         vc = await self.get_vc(ctx)
         await vc.disconnect()
         await ctx.reply(embed=self.generate_success_embed("Left!"))
 
     @commands.hybrid_command()  # type: ignore
     async def now(self, ctx: commands.Context) -> None:
+        """
+        Get current song that is playing
+        """
         vc = await self.get_vc(ctx)
-        track = self.playings.get(ctx.guild)  # type: ignore
+        track = vc.current
         if track:
             await ctx.reply(embed=self.generate_song_embed(track, vc))
         else:
@@ -349,6 +386,11 @@ class Music(commands.Cog):
         | wavelink.Playable,
         player: wavelink.Player,
     ) -> discord.Embed:
+        
+        """
+        Hacky way to actually showing a song information
+        """
+
         author = ""
         try:
             author: str = track.author  # type: ignore
@@ -371,6 +413,9 @@ class Music(commands.Cog):
     def convert_dur_pos_to_time(
         self, pos: typing.Optional[float], length: float
     ) -> str:
+        """
+        Convert position and end time to actual readable time format
+        """
         d_length = datetime.timedelta(milliseconds=length)
         if pos:
             d_pos = datetime.timedelta(milliseconds=pos)
@@ -379,6 +424,9 @@ class Music(commands.Cog):
 
     @commands.hybrid_command()  # type: ignore
     async def skip(self, ctx: commands.Context) -> None:
+        """
+        Skip current song by voting (3 votes are needed)
+        """
         vc = await self.get_vc(ctx)
         skipvotes = self.skips[ctx.guild]  # type: ignore
         if ctx.author in skipvotes:
@@ -398,6 +446,9 @@ class Music(commands.Cog):
 
     @commands.hybrid_command()  # type: ignore
     async def queue(self, ctx: commands.Context) -> None:
+        """
+        Showing a list of songs currently awaiting to be played.
+        """
         vc = await self.get_vc(ctx)
         if len(vc.queue) == 0:
             await ctx.reply(embed=self.generate_error("No more songs in queue!"))
@@ -414,6 +465,86 @@ class Music(commands.Cog):
                 break
         await ctx.reply(embed=e)
 
+    @commands.hybrid_command() # type: ignore
+    @describe(loop="Loop option")
+    async def loop(self, ctx: commands.Context, loop: bool) -> None:
+        """
+        Enable (or disable) single track looping
+        """
+        vc = await self.get_vc(ctx)
+        vc.queue.loop = loop
+        if vc.queue.loop_all == True:
+            await ctx.reply(embed=self.generate_error(
+                "WARNING: Queue Looping is enabled. Please disable it first."
+            ))
+            return
+        await ctx.reply(embed=self.generate_success_embed(
+            f"Successfully turned {'on' if loop else 'off'} looping music."
+        ))
+    @commands.hybrid_command() # type: ignore
+    @describe(lq="Loop queue option")
+    async def loop_queue(self, ctx: commands.Context, lq: bool) -> None:
+        """
+        Enable (or disable) queue looping
+        """
+        vc = await self.get_vc(ctx)
+        vc.queue.loop_all = lq
+        if vc.queue.loop == True:
+            await ctx.reply(embed=self.generate_error(
+                "WARNING: Single Track Loop is enabled. Please disable it first."
+            ))
+            return
+        await ctx.reply(embed=self.generate_success_embed(
+            f"Successfully turned {'on' if lq else 'off'} looping queue."
+        ))
+    @commands.hybrid_command() # type: ignore
+    @describe(shuffle="Shuffle option")
+    async def shuffle(self, ctx: commands.Context, shuffle: bool) -> None:
+        """
+        Shuffle (or disable shuffle) queue. Queue will be shuffled every time a song ends
+        """
+        vc = await self.get_vc(ctx)
+        self.shuffles[ctx.guild] = shuffle # type: ignore
+        if vc.queue.loop == True:
+            await ctx.reply(embed=self.generate_error(
+                "WARNING: Loop is enabled. This command will not have any effects when this turned on. Please disable it first."
+            ))
+            return
+        await ctx.reply(embed=self.generate_success_embed(
+            f"Successfully turned {'on' if shuffle else 'off'} music shuffler."
+        ))
+
+    @commands.hybrid_command() # type: ignore
+    @describe(pause="Pause Option")
+    async def pause(self, ctx: commands.Context, pause: bool | None = None) -> None:
+        """
+        Pause (or Resume) current song
+        """
+        vc = await self.get_vc(ctx)
+        if pause is not None:
+            match (pause, vc.is_paused()):
+                case (True, True) | (False, False):
+                    pass
+                case (True, False) | (False, True):
+                    await vc.pause()
+        else:
+            await vc.pause()
+        await ctx.reply(embed=self.generate_success_embed(
+            f"Successfully {'paused' if vc.is_paused() else 'unpaused'} track."
+        ))
+
+    @commands.hybrid_command() # type: ignore
+    @describe(index="Song index (get it through queue command)")
+    async def remove(self, ctx: commands.Context, index: int) -> None:
+        """
+        Removing a track from queue.
+        """
+        vc = await self.get_vc(ctx)
+        if index - 1 >= vc.queue.count:
+            await ctx.reply(embed=self.generate_error(
+                "Index is more than the count of the queue itself!"
+            ))
+        del vc.queue[index]
 
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(Music(bot))
