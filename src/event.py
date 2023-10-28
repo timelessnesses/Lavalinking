@@ -20,6 +20,7 @@ class Events(commands.Cog):
         error_message = "".join(
             traceback.format_exception(type(error), error, error.__traceback__)
         )
+        print(error_message)
         discord_version = discord.__version__
         file = MISSING
         if len(error_message) >= 4095:
@@ -108,7 +109,7 @@ class Events(commands.Cog):
                 ),
                 file=file,
             )
-            print(error_message)
+            
 
 
 async def setup(bot: commands.Bot):
