@@ -109,7 +109,6 @@ class Events(commands.Cog):
                 ),
                 file=file,
             )
-            
 
 
 async def setup(bot: commands.Bot):
