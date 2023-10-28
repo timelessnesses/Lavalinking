@@ -18,6 +18,8 @@ compose_run:
 	LAVALINKING_REV=$(shell git rev-parse --short main) docker compose up
 compose_build:
 	LAVALINKING_REV=$(shell git rev-parse --short main) docker compose build --no-cache
+compose_dev:
+	LAVALINKING_REV=$(shell git rev-parse --short main) docker compose up --build
 publish_image:
 	docker build . --build-arg="REVISION=$(shell git rev-parse --short main)" --tag ghcr.io/timelessnesses/lavalinking:latest --tag ghcr.io/timelessnesses/lavalinking:$(shell git rev-parse --short main) --tag ghcr.io/timelessnesses/lavalinking:main
 	docker push ghcr.io/timelessnesses/lavalinking:latest

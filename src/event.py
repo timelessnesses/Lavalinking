@@ -108,6 +108,7 @@ class Events(commands.Cog):
                 ),
                 file=file,
             )
+            print(error_message)
 
 
 async def setup(bot: commands.Bot):

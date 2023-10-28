@@ -58,7 +58,7 @@ bot = commands.AutoShardedBot(
     intents=discord.Intents.all(),
     owners_id=config.owners_id,
 )
-bot.log = log
+bot.log = log # type: ignore
 
 observer = Observer()
 
@@ -114,14 +114,11 @@ class _DuplicateEventLimiter:
         return is_duplicate
 
 
-class FileHandler(FileSystemEventHandler, _DuplicateEventLimiter):
+class FileHandler(FileSystemEventHandler):
     logger = logging.getLogger("lavalinking.bot.FileHandler.on_modified")
 
-    def __init__(self) -> None:
-        _DuplicateEventLimiter.__init__(self)
-
     def on_modified(self, event: FileSystemEvent):
-        if event.src_path.endswith(".py") and not self._is_duplicate(event):
+        if event.src_path.endswith(".py"):
             self.logger.info(f"File changed: {event.src_path}")
             self.logger.info("Reloading...")
             path = event.src_path.replace("\\", "/").replace("/", ".")[:-3]
@@ -147,7 +144,7 @@ def get_git_revision_short_hash() -> str:
 
 def get_version():
     if bool(int(os.getenv("DOCKERIZED", 0))):
-        bot.version_ = f"Containerized ({os.getenv('REVISION')})"
+        bot.version_ = f"Containerized ({os.getenv('REVISION')})" # type: ignore
         return
     is_updated = subprocess.check_output("git status", shell=True).decode("ascii")
 
@@ -162,18 +159,18 @@ def get_version():
         is_updated = False
 
     if is_updated:
-        bot.version_ = f"latest ({get_git_revision_short_hash()})"
+        bot.version_ = f"latest ({get_git_revision_short_hash()})" # type: ignore
     elif is_updated is None:
-        bot.version_ = f"{get_git_revision_short_hash()} (modified)"
+        bot.version_ = f"{get_git_revision_short_hash()} (modified)" # type: ignore 
     else:
-        bot.version_ = f"old ({get_git_revision_short_hash()}) - not up to date"
+        bot.version_ = f"old ({get_git_revision_short_hash()}) - not up to date" # type: ignore
 
 
 @bot.event
 async def on_ready():
     log.info("Logged in as")
-    log.info(bot.user.name)
-    log.info(bot.user.id)
+    log.info(bot.user.name) # type: ignore
+    log.info(bot.user.id) # type: ignore
     log.info("------")
     await bot.change_presence(activity=discord.Game(name=f"{config.prefix}help"))
     await bot.tree.sync()
@@ -191,10 +188,10 @@ async def main():
                         log.info(f"Loaded extension {extension[:-3]}")
                 await bot.load_extension("jishaku")
                 log.info("Loaded jishaku")
-                bot.start_time = datetime.datetime.utcnow()
+                bot.start_time = datetime.datetime.utcnow() # type: ignore
                 get_version()
                 log.info(
-                    f"Started with version {bot.version_} and started at {bot.start_time}"
+                    f"Started with version {bot.version_} and started at {bot.start_time}" # type: ignore
                 )
                 try:
                     await bot.start(config.token)

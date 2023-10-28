@@ -203,7 +203,7 @@ class Pages(discord.ui.View):
 
     @discord.ui.button(label="≪", style=discord.ButtonStyle.grey)  # type: ignore
     async def go_to_first_page(
-        self, button: discord.ui.Button, interaction: discord.Interaction
+        self, interaction: discord.Interaction, button: discord.ui.Button, 
     ):
         """go to the first page"""
 
@@ -211,7 +211,7 @@ class Pages(discord.ui.View):
 
     @discord.ui.button(label="Back", style=discord.ButtonStyle.blurple)  # type: ignore
     async def go_to_previous_page(
-        self, button: discord.ui.Button, interaction: discord.Interaction
+        self, interaction: discord.Interaction, button: discord.ui.Button, 
     ):
         """go to the previous page"""
 
@@ -219,13 +219,13 @@ class Pages(discord.ui.View):
 
     @discord.ui.button(label="Current", style=discord.ButtonStyle.grey, disabled=True)  # type: ignore
     async def go_to_current_page(
-        self, button: discord.ui.Button, interaction: discord.Interaction
+        self, interaction: discord.Interaction, button: discord.ui.Button, 
     ):
         pass
 
     @discord.ui.button(label="Next", style=discord.ButtonStyle.blurple)  # type: ignore
     async def go_to_next_page(
-        self, button: discord.ui.Button, interaction: discord.Interaction
+        self, interaction: discord.Interaction, button: discord.ui.Button, 
     ):
         """go to the next page"""
 
@@ -233,7 +233,7 @@ class Pages(discord.ui.View):
 
     @discord.ui.button(label="≫", style=discord.ButtonStyle.grey)  # type: ignore
     async def go_to_last_page(
-        self, button: discord.ui.Button, interaction: discord.Interaction
+        self, interaction: discord.Interaction, button: discord.ui.Button, 
     ):
         """go to the last page"""
 
@@ -243,7 +243,7 @@ class Pages(discord.ui.View):
 
     @discord.ui.button(label="Skip to page...", style=discord.ButtonStyle.grey)  # type: ignore
     async def numbered_page(
-        self, button: discord.ui.Button, interaction: discord.Interaction
+        self, interaction: discord.Interaction, button: discord.ui.Button, 
     ):
         """lets you type a page number to go to"""
 
@@ -291,13 +291,13 @@ class Pages(discord.ui.View):
 
     @discord.ui.button(label="Quit", style=discord.ButtonStyle.red)  # type: ignore
     async def stop_pages(
-        self, button: discord.ui.Button, interaction: discord.Interaction
+        self, interaction: discord.Interaction, button: discord.ui.Button, 
     ):
         """stops the pagination session."""
 
-        await button.response.defer()
+        await interaction.response.defer()
 
-        await button.delete_original_message()
+        await interaction.delete_original_response()
         self.stop()
 
 
@@ -313,7 +313,7 @@ class FieldPageSource(menus.ListPageSource):
     async def format_page(self, menu, entries):
         self.embed.clear_fields()
 
-        self.embed.description = discord.Embed.Empty
+        self.embed.description = ""
 
         for key, value in entries:
             self.embed.add_field(name=key, value=value, inline=False)

@@ -106,7 +106,10 @@ class Music(commands.Cog):
     async def on_wavelink_track_start(self, pl: wavelink.TrackEventPayload) -> None:
         if pl.player.guild is None:
             return
-        self.skips[pl.player.guild].clear()
+        try:
+            self.skips[pl.player.guild].clear()
+        except KeyError:
+            pass
     
     @commands.Cog.listener()
     async def on_wavelink_track_end(self, pl: wavelink.TrackEventPayload) -> None:
@@ -124,8 +127,10 @@ class Music(commands.Cog):
         ] = None,
     ) -> typing.Optional[wavelink.Player]:
         """
-        Make the bot join to the specified voice channel (supply channel argument is required if you are not in any voice chat in this server.)
+        Make the bot join to the specified voice channel
         """
+
+        print(ctx)
 
         try:
             channel = channel or ctx.author.voice.channel  # type: ignore[union-attr]
@@ -150,7 +155,7 @@ class Music(commands.Cog):
                 ctx.guild.id  # type: ignore[union-attr]
             )
         elif ctx.author.voice:  # type: ignore
-            vc: wavelink.Player = await self.join(ctx.author.voice)  # type: ignore
+            vc: wavelink.Player = await self.join(ctx)  # type: ignore
         if vc is None:
             await ctx.reply(
                 embed=self.generate_error("No voice chat instance detected.")
@@ -297,7 +302,7 @@ class Music(commands.Cog):
     @describe(enable = "Enable auto play or not?")
     async def autoplay(self, ctx: commands.Context, enable: bool) -> None:
         """
-        If autoplay is enabled, bot will actually automatically adding new songs to the queue based on recommendation of spotify and youtube.
+        If enabled, bot will actually automatically adding new songs based on recommendation algorithm.
         """
         vc = await self.get_vc(ctx)
 
@@ -312,10 +317,14 @@ class Music(commands.Cog):
         """
         IT FUCKING PLAY SONG
         """
+        print('hello')
         if vc.is_playing():
+            print('its somehow playing')
             await vc.queue.put_wait(track)  # type: ignore
             return
+        print('it plays')
         await vc.play(track, populate)  # type: ignore
+        print('yeah')
 
     @commands.command()
     @describe(clear = "Clearing queue")
@@ -472,12 +481,13 @@ class Music(commands.Cog):
         Enable (or disable) single track looping
         """
         vc = await self.get_vc(ctx)
-        vc.queue.loop = loop
         if vc.queue.loop_all == True:
             await ctx.reply(embed=self.generate_error(
                 "WARNING: Queue Looping is enabled. Please disable it first."
             ))
             return
+        else:
+            vc.queue.loop = loop
         await ctx.reply(embed=self.generate_success_embed(
             f"Successfully turned {'on' if loop else 'off'} looping music."
         ))
@@ -515,20 +525,12 @@ class Music(commands.Cog):
         ))
 
     @commands.hybrid_command() # type: ignore
-    @describe(pause="Pause Option")
-    async def pause(self, ctx: commands.Context, pause: bool | None = None) -> None:
+    async def pause(self, ctx: commands.Context) -> None:
         """
         Pause (or Resume) current song
         """
         vc = await self.get_vc(ctx)
-        if pause is not None:
-            match (pause, vc.is_paused()):
-                case (True, True) | (False, False):
-                    pass
-                case (True, False) | (False, True):
-                    await vc.pause()
-        else:
-            await vc.pause()
+        await vc.pause()
         await ctx.reply(embed=self.generate_success_embed(
             f"Successfully {'paused' if vc.is_paused() else 'unpaused'} track."
         ))
