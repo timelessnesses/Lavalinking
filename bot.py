@@ -58,7 +58,7 @@ bot = commands.AutoShardedBot(
     intents=discord.Intents.all(),
     owners_id=config.owners_id,
 )
-bot.log = log # type: ignore
+bot.log = log  # type: ignore
 
 observer = Observer()
 
@@ -144,7 +144,7 @@ def get_git_revision_short_hash() -> str:
 
 def get_version():
     if bool(int(os.getenv("DOCKERIZED", 0))):
-        bot.version_ = f"Containerized ({os.getenv('REVISION')})" # type: ignore
+        bot.version_ = f"Containerized ({os.getenv('REVISION')})"  # type: ignore
         return
     is_updated = subprocess.check_output("git status", shell=True).decode("ascii")
 
@@ -159,18 +159,18 @@ def get_version():
         is_updated = False
 
     if is_updated:
-        bot.version_ = f"latest ({get_git_revision_short_hash()})" # type: ignore
+        bot.version_ = f"latest ({get_git_revision_short_hash()})"  # type: ignore
     elif is_updated is None:
-        bot.version_ = f"{get_git_revision_short_hash()} (modified)" # type: ignore 
+        bot.version_ = f"{get_git_revision_short_hash()} (modified)"  # type: ignore
     else:
-        bot.version_ = f"old ({get_git_revision_short_hash()}) - not up to date" # type: ignore
+        bot.version_ = f"old ({get_git_revision_short_hash()}) - not up to date"  # type: ignore
 
 
 @bot.event
 async def on_ready():
     log.info("Logged in as")
-    log.info(bot.user.name) # type: ignore
-    log.info(bot.user.id) # type: ignore
+    log.info(bot.user.name)  # type: ignore
+    log.info(bot.user.id)  # type: ignore
     log.info("------")
     await bot.change_presence(activity=discord.Game(name=f"{config.prefix}help"))
     await bot.tree.sync()
@@ -188,10 +188,10 @@ async def main():
                         log.info(f"Loaded extension {extension[:-3]}")
                 await bot.load_extension("jishaku")
                 log.info("Loaded jishaku")
-                bot.start_time = datetime.datetime.utcnow() # type: ignore
+                bot.start_time = datetime.datetime.utcnow()  # type: ignore
                 get_version()
                 log.info(
-                    f"Started with version {bot.version_} and started at {bot.start_time}" # type: ignore
+                    f"Started with version {bot.version_} and started at {bot.start_time}"  # type: ignore
                 )
                 try:
                     await bot.start(config.token)
