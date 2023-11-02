@@ -122,7 +122,6 @@ class Music(commands.Cog):
             pass
         else:
             await pl.player.play(song)
-        
 
     @commands.hybrid_command()  # type: ignore
     @describe(channel="Specify a voice/stage channel")
