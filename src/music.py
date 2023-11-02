@@ -116,6 +116,13 @@ class Music(commands.Cog):
         guild = self.shuffles.get(pl.player.guild)  # type: ignore
         if guild:
             pl.player.queue.shuffle()
+        try:
+            song = pl.player.queue.get()
+        except wavelink.QueueEmpty:
+            pass
+        else:
+            await pl.player.play(song)
+        
 
     @commands.hybrid_command()  # type: ignore
     @describe(channel="Specify a voice/stage channel")
