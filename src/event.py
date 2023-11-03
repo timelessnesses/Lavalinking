@@ -7,6 +7,8 @@ import discord
 from discord.ext import commands
 from discord.utils import MISSING
 
+from .utils.exceptions import LavalinkingException
+
 
 class Events(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -18,13 +20,16 @@ class Events(commands.Cog):
         error_message = "".join(
             traceback.format_exception(type(error), error, error.__traceback__)
         )
+        print(error_message)
         discord_version = discord.__version__
         file = MISSING
-        if len(error_message) <= 4095:
-            file = discord.File(io.StringIO(error_message), filename="errorlog.py")
+        if len(error_message) >= 4095:
+            file = discord.File(
+                fp=io.BytesIO(error_message.encode()), filename="errorlog.py"
+            )
             error_message = "Error is too long consider reading the errorlog.py file."
         if isinstance(error, commands.CommandNotFound):
-            matches = difflib.get_close_matches(ctx.bot.commands, ctx.invoked_with)
+            matches = difflib.get_close_matches(ctx.bot.commands, ctx.invoked_with)  # type: ignore
             if len(matches) >= 2:
                 await ctx.send(
                     embed=discord.Embed(
@@ -83,6 +88,8 @@ class Events(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
+        elif isinstance(error, LavalinkingException):
+            return  # completely ignore this fucker
         else:
             await ctx.send(
                 embed=(

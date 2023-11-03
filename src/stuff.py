@@ -1,7 +1,7 @@
 import asyncio
 import platform
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import discord
 import psutil
@@ -10,9 +10,7 @@ from discord.ext import commands
 from . import utils
 
 sys.path.append("..")
-import humanize
 import wavelink
-from wavelink.ext import spotify
 
 from config import config
 
@@ -52,15 +50,15 @@ class Stuff(
         self.owners.append(self.bot.owner_id)
         self.owners = {int(id) for id in self.owners if not id is None}
 
-    async def cog_check(self, ctx: commands.Context) -> bool:
+    def cog_check(self, ctx: commands.Context) -> bool:
         return True
 
     @property
     def display_emoji(self) -> str:
         return "💭"
 
-    @commands.hybrid_command(name="credits", aliases=["c"])
-    async def credits(self, ctx):
+    @commands.hybrid_command(name="credits", aliases=["c"])  # type: ignore
+    async def credits(self, ctx: commands.Context) -> None:
         """
         Shows the credits.
         """
@@ -78,7 +76,7 @@ class Stuff(
 
         await ctx.send(embed=embed)
 
-    @commands.hybrid_command(name="ping", aliases=["p"])
+    @commands.hybrid_command(name="ping", aliases=["p"])  # type: ignore
     async def ping(self, ctx):
         """
         Pong!
@@ -90,7 +88,7 @@ class Stuff(
         )
         await ctx.send(embed=embed)
 
-    @commands.hybrid_command(name="status")
+    @commands.hybrid_command(name="status")  # type: ignore
     async def status(self, ctx) -> None:
         """
         Status of bot like uptime, memory usage, etc.
@@ -110,44 +108,19 @@ class Stuff(
         embed.add_field(name="Bot version", value=f"{self.bot.version_}")
         await ctx.send(embed=embed)
 
-    @commands.hybrid_command(name="node_stats")
+    @commands.hybrid_command(name="node_stats")  # type: ignore
     async def node_stats(self, ctx) -> None:
         """
         Shows the lavalink stats.
         """
-        client: wavelink.ext.spotify.SpotifyClient = None
-        if config.spotify_client_id and config.spotify_client_secret:
-            client = spotify.SpotifyClient(
-                client_id=config.spotify_client_id,
-                client_secret=config.spotify_client_secret,
-            )
         node = wavelink.NodePool.get_node()
         embed = discord.Embed(
             title=f"Node Status for {config.lavalink_host}",
         )
-        embed.add_field(name="Connected", value=node.is_connected())
-        embed.add_field(name="Connected to", value=config.lavalink_host)
-        embed.add_field(name="Lavalink's Server CPU Cores", value=node.stats.cpu_cores)
         embed.add_field(
-            name="Lavalink's Uptime",
-            value=timedelta(milliseconds=round(node.stats.uptime, 2)),
+            name="Connected", value=node.status == wavelink.NodeStatus.CONNECTED
         )
-        embed.add_field(name="Lavalink's occupied players", value=node.stats.players)
-        embed.add_field(
-            name="Lavalink's playing players", value=node.stats.playing_players
-        )
-        embed.add_field(
-            name="Lavalink's Memory Free",
-            value=humanize.naturalsize(node.stats.memory_free, binary=True),
-        )
-        embed.add_field(
-            name="Lavalink's Memory Used",
-            value=humanize.naturalsize(node.stats.memory_used, binary=True),
-        )
-        embed.add_field(
-            name="Lavalink's Server load",
-            value=f"{round(node.stats.lavalink_load,3)* 100}%",
-        )
+        embed.add_field(name="Lavalink host", value=config.lavalink_host)
         await ctx.send(embed=embed)
 
 

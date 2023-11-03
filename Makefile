@@ -1,15 +1,5 @@
-POETRY_PYTHON_PATH = $(shell poetry env info --path) # wow copilot ur amazing
-POETRY_PYTHON_PATH := $(subst  ,,$(POETRY_PYTHON_PATH)) # remove spaces
-ifeq ($(OS),Windows_NT)
-	# Windows
-	PYTHON = $(addsuffix \Scripts\python.exe,$(POETRY_PYTHON_PATH))
-else
-	# Linux
-	PYTHON = $(addsuffix /bin/python,$(POETRY_PYTHON_PATH))
-endif
-
 run:
-	$(PYTHON) bot.py
+	poetry run python bot.py
 install:
 	poetry install
 update:
@@ -21,3 +11,21 @@ beauty: # this is mostly used in CI so just use global python
 	python -m autoflake --remove-all-unused-imports --remove-unused-variables --in-place -r .
 install-beautifier:
 	pip install isort black flake8 autoflake
+
+build_image:
+	docker build . --tag lavalinking_dev:latest --build-arg="REVISION=$(shell git rev-parse --short main)"
+compose_run:
+	LAVALINKING_REV=$(shell git rev-parse --short main) docker compose up
+compose_build:
+	LAVALINKING_REV=$(shell git rev-parse --short main) docker compose build --no-cache
+compose_dev:
+	LAVALINKING_REV=$(shell git rev-parse --short main) docker compose up --build
+publish_image:
+	docker build . --build-arg="REVISION=$(shell git rev-parse --short main)" --tag ghcr.io/timelessnesses/lavalinking:latest --tag ghcr.io/timelessnesses/lavalinking:$(shell git rev-parse --short main) --tag ghcr.io/timelessnesses/lavalinking:main
+	docker push ghcr.io/timelessnesses/lavalinking:latest
+	docker push ghcr.io/timelessnesses/lavalinking:main
+	docker push ghcr.io/timelessnesses/lavalinking:$(shell git rev-parse --short main)
+publish_no_builds:
+	docker push ghcr.io/timelessnesses/lavalinking:latest
+	docker push ghcr.io/timelessnesses/lavalinking:main
+	docker push ghcr.io/timelessnesses/lavalinking:$(shell git rev-parse --short main)

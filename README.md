@@ -1,4 +1,4 @@
-# Music bot with lavalink
+# Lavalinking (REWRITE)
 
 A easy/configurable/lots of features for your need!  
 This bot is designed to be stateless music bot (no database, no cache, no persistent data) so no needs for a database!
@@ -11,6 +11,7 @@ This bot is designed to be stateless music bot (no database, no cache, no persis
 
 - Python 3.8 or higher
 - poetry (`pip install poetry`)
+- A lavalink server (either locally host it or find one [here](https://lavalink.darrennathanael.com/) or if you are lazy go ahead use `lavalink.api.timelessnesses.me` with port of 80 and password `youshallnotpass` and it's not ssl)
 
 #### Procedure
 
@@ -68,12 +69,16 @@ lavalink_is_https = True or False based on if you use https or not
 - [x] Music queue
 - [x] Music loop
 - [x] Skipping
-- [x] Volume control
+- [x] Volume control (up to 1000)
 - [x] Music search
-- [x] Live time update (Every Seconds)
+- [x] Live time update (Every 5 Seconds)
 - [x] Skip votes
 - [ ] Filters
 - [x] Loop queues
+- [x] Playing from file attachment and direct audio/video URL
+- [x] Together  activity (deprecated)
+- [x] Assuring command argument have the appropiate type
+- [x] Slash command/Prefix command
 
 ## Recommendations
 1. Please use this [lavalink jar file](https://github.com/davidffa/lavalink) for better results or find node that use this
