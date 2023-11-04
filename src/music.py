@@ -450,13 +450,15 @@ class Music(commands.Cog):
         Skip current song by voting (3 votes are needed)
         """
         vc = await self.get_vc(ctx)
-        skipvotes = self.skips[ctx.guild]  # type: ignore
+        skipvotes = self.skips.get(ctx.guild, [])
         if ctx.author in skipvotes:
             await ctx.reply(
                 embed=self.generate_error("You are already voted for skipping!")
             )
             return
-        self.skips[ctx.guild].append(ctx.author)  # type: ignore
+        if self.skips.get(ctx.guild, None) is None:
+            self.skips[ctx.guild] = []
+        self.skips[ctx.guild].append(ctx.author)
         if len(self.skips[ctx.guild]) >= 3:  # type: ignore
             await vc.stop(force=True)
             return
