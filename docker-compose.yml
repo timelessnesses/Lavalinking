@@ -4,6 +4,8 @@ services:
       context: .
       args:
         - REVISION=${LAVALINKING_REV}
+    depends_on:
+      - lavalink
     env_file:
       - .env
     environment:
