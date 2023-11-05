@@ -103,3 +103,7 @@ actual_class_name_for_class_methods = {
     Enum_Filters.channel_mix_full_right: Enum_Filters.channel_mix,
     Enum_Filters.channel_mix_switch: Enum_Filters.channel_mix,
 }
+
+class Direction(enum.Enum):
+    forward = 0
+    backward = 1
