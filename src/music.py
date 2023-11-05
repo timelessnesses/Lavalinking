@@ -281,7 +281,7 @@ class Music(commands.Cog):
         vc = await self.get_vc(ctx)
         if detect_url(query):
             source = detect_source(query)  # type: ignore[assignment]
-            await self.play_song(vc, (await self.get_song_by_url(source, query)))  # type: ignore
+            await self.play_song(vc, (await self.get_song_by_url(source, query)), populate)  # type: ignore
             return
         tracks = (await self.search_tracks(self.convert_source(source, playlist), query))[:10]  # type: ignore
         await ctx.reply(embed=self.build_selection_tracks(tracks))
