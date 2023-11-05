@@ -10,10 +10,10 @@ from discord.ext import commands
 
 from config import config
 
+from .utils.enums import Direction
 from .utils.exceptions import LavalinkingException
 from .utils.regexes import detect_source, detect_url
 from .utils.types import Sources, SpotifyTrackTypes
-from .utils.enums import Direction
 
 Playables = typing.TypeVar(
     "Playables",
@@ -277,13 +277,13 @@ class Music(commands.Cog):
         """
         Play a song
         """
-        
+
         await ctx.defer()
-        
+
         vc = await self.get_vc(ctx)
         if detect_url(query):
             source = detect_source(query)  # type: ignore[assignment]
-            track = await self.get_song_by_url(source, query) # type: ignore
+            track = await self.get_song_by_url(source, query)  # type: ignore
         else:
             tracks = (await self.search_tracks(self.convert_source(source, playlist), query))[:10]  # type: ignore
             await ctx.reply(embed=self.build_selection_tracks(tracks))
@@ -302,7 +302,9 @@ class Music(commands.Cog):
                 await ctx.reply(embed=self.generate_error("Invalid index! Exiting"))
                 return
             except IndexError:
-                await ctx.reply(embed=self.generate_error("Out of index bound! Exiting"))
+                await ctx.reply(
+                    embed=self.generate_error("Out of index bound! Exiting")
+                )
                 return
         await self.play_song(vc, track, populate)
         await ctx.reply(
@@ -364,9 +366,9 @@ class Music(commands.Cog):
         """
         Change the bot's volume
         """
-        
+
         await ctx.defer()
-        
+
         vc = await self.get_vc(ctx)
         if volume is None:
             await ctx.reply(
@@ -385,7 +387,7 @@ class Music(commands.Cog):
         """
         Making the bot leave the current voice chat it's currently in
         """
-        
+
         await ctx.defer()
 
         vc = await self.get_vc(ctx)
@@ -397,9 +399,9 @@ class Music(commands.Cog):
         """
         Get current song that is playing
         """
-        
+
         await ctx.defer()
-        
+
         vc = await self.get_vc(ctx)
         track = vc.current
         if track:
@@ -430,7 +432,7 @@ class Music(commands.Cog):
         try:
             author: str = track.author  # type: ignore
         except AttributeError:
-            author = ", ".join(track.artists) # type: ignore
+            author = ", ".join(track.artists)  # type: ignore
         e = discord.Embed(
             title=f"Now Playing: {author} - {track.title}",
             description=f"""
@@ -449,7 +451,7 @@ class Music(commands.Cog):
         """
         d_length = datetime.timedelta(seconds=length // 1000)
         if pos:
-            d_pos = datetime.timedelta(seconds= pos // 1000)
+            d_pos = datetime.timedelta(seconds=pos // 1000)
             return f"{str(d_pos)}/{str(d_length)} ({str(d_length - d_pos)}) ({round(100 * d_pos.total_seconds() / d_length.total_seconds(), 2)}%)"
         return f"{str(d_length)}"
 
@@ -458,19 +460,19 @@ class Music(commands.Cog):
         """
         Skip current song by voting (3 votes are needed)
         """
-        
+
         await ctx.defer()
-        
+
         vc = await self.get_vc(ctx)
-        skipvotes: list[discord.Member] = self.skips.get(ctx.guild, []) # type: ignore
+        skipvotes: list[discord.Member] = self.skips.get(ctx.guild, [])  # type: ignore
         if ctx.author in skipvotes:
             await ctx.reply(
                 embed=self.generate_error("You are already voted for skipping!")
             )
             return
-        if self.skips.get(ctx.guild, None) is None: # type: ignore
-            self.skips[ctx.guild] = [] # type: ignore
-        self.skips[ctx.guild].append(ctx.author) # type: ignore
+        if self.skips.get(ctx.guild, None) is None:  # type: ignore
+            self.skips[ctx.guild] = []  # type: ignore
+        self.skips[ctx.guild].append(ctx.author)  # type: ignore
         if len(self.skips[ctx.guild]) >= 3:  # type: ignore
             await vc.stop(force=True)
             return
@@ -485,9 +487,9 @@ class Music(commands.Cog):
         """
         Showing a list of songs currently awaiting to be played.
         """
-        
+
         await ctx.defer()
-        
+
         vc = await self.get_vc(ctx)
         if len(vc.queue) == 0:
             await ctx.reply(embed=self.generate_error("No more songs in queue!"))
@@ -573,9 +575,9 @@ class Music(commands.Cog):
         """
         Pause (or Resume) current song
         """
-        
+
         await ctx.defer()
-        
+
         vc = await self.get_vc(ctx)
         await vc.pause()
         await ctx.reply(
@@ -598,16 +600,21 @@ class Music(commands.Cog):
                 )
             )
         del vc.queue[index]
-        
+
     @commands.hybrid_command()
-    @describe(direction="Either seek forward or backward", position="How many seconds you want to seek")
-    async def seek(self, ctx: commands.Context, direction: Direction, position: float) -> None:
+    @describe(
+        direction="Either seek forward or backward",
+        position="How many seconds you want to seek",
+    )
+    async def seek(
+        self, ctx: commands.Context, direction: Direction, position: float
+    ) -> None:
         """
         Seek the song either backward or forward
         """
-        
+
         await ctx.defer()
-        
+
         vc = await self.get_vc(ctx)
         pos = vc.position / 1000
         if direction == Direction.forward:
@@ -615,11 +622,16 @@ class Music(commands.Cog):
         elif direction == Direction.backward:
             pos -= position
         else:
-            await ctx.reply(embed=self.generate_error("Invalid seeking direction value!"))
+            await ctx.reply(
+                embed=self.generate_error("Invalid seeking direction value!")
+            )
             return
         await vc.seek(int(pos * 1000))
-        await ctx.reply(embed=self.generate_success_embed(f"Successfully seeked {'forward' if direction == Direction.forward else 'backward'} for {position} seconds!"))
-        
+        await ctx.reply(
+            embed=self.generate_success_embed(
+                f"Successfully seeked {'forward' if direction == Direction.forward else 'backward'} for {position} seconds!"
+            )
+        )
 
 
 async def setup(bot: commands.Bot) -> None:

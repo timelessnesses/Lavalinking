@@ -33,7 +33,7 @@ try:
     os.mkdir("logs")
 except FileExistsError:
     pass
-log_path = f"logs/bot_{datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')}.log" # FUCKIBG WINDOWS DOESNT SUPPORT :
+log_path = f"logs/bot_{datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')}.log"  # FUCKIBG WINDOWS DOESNT SUPPORT :
 with open(log_path, "w") as f_:
     f_.write("")
 f = logging.FileHandler(log_path, "w")
