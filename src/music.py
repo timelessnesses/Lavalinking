@@ -601,11 +601,7 @@ class Music(commands.Cog):
             )
             return
         del vc.queue[index]
-        await ctx.reply(
-            embed=self.generate_success_embed(
-                "Deleted the queue"
-            )
-        )
+        await ctx.reply(embed=self.generate_success_embed("Deleted the queue"))
 
     @commands.hybrid_command()
     @describe(
