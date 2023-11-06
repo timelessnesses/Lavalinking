@@ -599,7 +599,13 @@ class Music(commands.Cog):
                     "Index is more than the count of the queue itself!"
                 )
             )
+            return
         del vc.queue[index]
+        await ctx.reply(
+            embed=self.generate_success_embed(
+                "Deleted the queue"
+            )
+        )
 
     @commands.hybrid_command()
     @describe(
