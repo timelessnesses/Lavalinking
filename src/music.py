@@ -351,7 +351,6 @@ class Music(commands.Cog):
         """
         vc = await self.get_vc(ctx)
         await vc.stop()
-        await vc.seek(0)
         if clear:
             vc.queue.clear()
         await ctx.reply(embed=self.generate_success_embed("Stopped!"))
@@ -458,7 +457,7 @@ class Music(commands.Cog):
     @commands.hybrid_command()  # type: ignore
     async def skip(self, ctx: commands.Context) -> None:
         """
-        Skip current song by voting (3 votes are needed)
+        Skip current song by voting (2 votes are needed)
         """
 
         await ctx.defer()
@@ -496,14 +495,11 @@ class Music(commands.Cog):
             return
         e = discord.Embed(title="Queue (Limited to 10 songs)")
         c = 0
-        for track in vc.queue:
+        for x, track in enumerate(vc.queue,1):
             e.add_field(
-                name=f"{track.__dict__.get('author', ', '.join(track.__dict__.get('artists', [])))}",
+                name=f"{x}. {track.__dict__.get('author', ', '.join(track.__dict__.get('artists', [])))}",
                 value=f"{track.title}",
             )
-            c += 1
-            if c == 10:
-                break
         await ctx.reply(embed=e)
 
     @commands.hybrid_command()  # type: ignore
@@ -600,7 +596,7 @@ class Music(commands.Cog):
                 )
             )
             return
-        del vc.queue[index]
+        del vc.queue[index-1]
         await ctx.reply(embed=self.generate_success_embed("Deleted the queue"))
 
     @commands.hybrid_command()
