@@ -494,8 +494,7 @@ class Music(commands.Cog):
             await ctx.reply(embed=self.generate_error("No more songs in queue!"))
             return
         e = discord.Embed(title="Queue (Limited to 10 songs)")
-        c = 0
-        for x, track in enumerate(vc.queue,1):
+        for x, track in enumerate(vc.queue, 1):
             e.add_field(
                 name=f"{x}. {track.__dict__.get('author', ', '.join(track.__dict__.get('artists', [])))}",
                 value=f"{track.title}",
@@ -596,7 +595,7 @@ class Music(commands.Cog):
                 )
             )
             return
-        del vc.queue[index-1]
+        del vc.queue[index - 1]
         await ctx.reply(embed=self.generate_success_embed("Deleted the queue"))
 
     @commands.hybrid_command()
