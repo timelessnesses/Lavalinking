@@ -16,7 +16,7 @@ psutil = "^5.9.4"
 discord-ext-menus = {git = "https://github.com/Rapptz/discord-ext-menus"}
 python-dotenv = "^1.0.0"
 PyNaCl = "^1.5.0"
-humanize = "^4.6.0"
+humanize = "^4.9.0"
 discord-together = "^1.2.6"
 wavelink = "^2.6.3"
 discord-py = "^2.3.2"
