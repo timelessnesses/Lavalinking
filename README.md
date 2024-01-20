@@ -63,6 +63,12 @@ lavalink_is_https = True or False based on if you use https or not
 1. Create `.env` file and configure stuff as same as one in [Step 2 Procedure](#procedure)
 2. Run `docker run --env-file=.env ghcr.io/timelessnesses/lavalinking:latest` (Add `-d` flag for detaching from the console and run it in background)
 
+### Docker (Lavalink server included)
+
+1. Clone the repository
+2. Create `.env` file and configure stuff as same as one in [Step 2 Procedure](#procedure)
+3. Run `docker compose up` (Add `-d` flag for detaching from the console and run it in background)
+
 ## Features
 
 - [x] Using lavalink
