@@ -9,7 +9,7 @@ This bot is designed to be stateless music bot (no database, no cache, no persis
 
 #### Requirement
 
-- Python 3.8 or higher
+- Python 3.10 or higher
 - poetry (`pip install poetry`)
 - A lavalink server (either locally host it or find one [here](https://lavalink.darrennathanael.com/) or if you are lazy go ahead use `lavalink.api.timelessnesses.me` with port of 80 and password `youshallnotpass` and it's not ssl)
 
@@ -48,17 +48,20 @@ lavalink_password = "lavalink password"
 lavalink_is_https = True or False based on if you use https or not
 ```
 
-3. Do `poetry install`
+3. Do `make install`
 
-4. Do `poetry shell` to activate the virtual environment
+4. Do `make run`
 
-5. Run `python3 bot.py`
+### Docker (BYO Image)
 
-6. Enjoy~
+1. Configure stuffs inside `config/config.py`
+2. Build image with `make build_image`
+3. Run with `docker run lavalinking_dev:latest` (Add `-d` flag for detaching from the console and run it in background)
 
-### Docker (pain)
+### Docker (GitHub Pre-built Image)
 
-1. Build it yourself with [`docker build .`](#building-docker) or clone it with `docker pull ghcr.io/timelessnesses/music-lavalink-bot:latest`
+1. Create `.env` file and configure stuff as same as one in [Step 2 Procedure](#procedure)
+2. Run `docker run --env-file=.env ghcr.io/timelessnesses/lavalinking:latest` (Add `-d` flag for detaching from the console and run it in background)
 
 ## Features
 
@@ -76,7 +79,6 @@ lavalink_is_https = True or False based on if you use https or not
 - [ ] Filters
 - [x] Loop queues
 - [x] Playing from file attachment and direct audio/video URL
-- [x] Together  activity (deprecated)
 - [x] Assuring command argument have the appropiate type
 - [x] Slash command/Prefix command
 
