@@ -316,7 +316,6 @@ class Pages(discord.ui.View):
 
 
 class FieldPageSource(menus.ListPageSource):
-
     """A page source that requires (field_name, field_value) tuple items."""
 
     def __init__(self, entries, *, per_page=12):
@@ -383,7 +382,6 @@ class SimplePageSource(menus.ListPageSource):
 
 
 class SimplePages(Pages):
-
     """A simple pagination session reminiscent of the old Pages interface.
     Basically an embed with some normal formatting.
     """
