@@ -45,7 +45,6 @@ Tracks = (
 
 
 class Music(commands.Cog):
-
     """
     A music category with a very powerful controlling commands
     """
@@ -414,13 +413,15 @@ class Music(commands.Cog):
 
     def generate_song_embed(
         self,
-        track: wavelink.YouTubeTrack
-        | wavelink.YouTubePlaylist
-        | wavelink.SoundCloudTrack
-        | wavelink.SoundCloudPlaylist
-        | wavelink.GenericTrack
-        | wavelink.ext.spotify.SpotifyTrack
-        | wavelink.Playable,
+        track: (
+            wavelink.YouTubeTrack
+            | wavelink.YouTubePlaylist
+            | wavelink.SoundCloudTrack
+            | wavelink.SoundCloudPlaylist
+            | wavelink.GenericTrack
+            | wavelink.ext.spotify.SpotifyTrack
+            | wavelink.Playable
+        ),
         player: wavelink.Player,
     ) -> discord.Embed:
         """

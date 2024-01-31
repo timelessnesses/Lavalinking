@@ -1,6 +1,7 @@
 """
 Stole from [Robo Danny](https://github.com/Rapptz/RoboDanny)
 """
+
 from __future__ import annotations
 
 import inspect
