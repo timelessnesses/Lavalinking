@@ -1,4 +1,4 @@
-FROM python:3.10-alpine as base
+FROM python:3.13.0b1-alpine as base
 RUN python3 -m pip install poetry
 RUN python3 -m poetry config virtualenvs.in-project true
 FROM base as build
@@ -8,7 +8,7 @@ RUN apk update
 RUN apk add --no-cache make gcc linux-headers build-base 
 RUN python3 -m poetry install
 RUN apk del gcc linux-headers build-base
-FROM python:3.10-alpine as run
+FROM python:3.13.0b1-alpine as run
 WORKDIR /bot
 COPY --from=build /bot .
 ENV JISHAKU_HIDE=1
