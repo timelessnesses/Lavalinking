@@ -3,6 +3,10 @@
 A easy/configurable/lots of features for your need!  
 This bot is designed to be stateless music bot (no database, no cache, no persistent data) so no needs for a database!
 
+## Status
+
+This project is now unmaintained with too many bugs, and I am kinda not interested in it anymore. The actual bot will also be shut down, thanks for using it.
+
 ## How to host this???
 
 ### Normal
